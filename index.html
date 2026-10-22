@@ -67,7 +67,6 @@ footer{padding:28px 0 40px;color:var(--muted);font-size:14px}
  </div>
 </header>
 <div id="app"></div>
-<footer><p><b>Outlets we follow:</b> <a href="https://www.armyrecognition.com/" target="_blank" rel="noopener">Army Recognition</a>, <a href="https://thedefensepost.com/" target="_blank" rel="noopener">The Defense Post</a>, <a href="https://defence-industry.eu/" target="_blank" rel="noopener">Defence Industry Europe</a>, <a href="https://euro-sd.com/" target="_blank" rel="noopener">European Security & Defence</a>, <a href="https://www.defenseworld.net/" target="_blank" rel="noopener">Defense World</a>, <a href="https://warontherocks.com/" target="_blank" rel="noopener">War on the Rocks</a>, <a href="https://www.twz.com/" target="_blank" rel="noopener">The War Zone</a>, <a href="https://www.rusi.org/" target="_blank" rel="noopener">RUSI</a>, <a href="https://zbiam.pl/" target="_blank" rel="noopener">ZBiAM</a>, <a href="https://www.defenseone.com/" target="_blank" rel="noopener">Defense One</a>, <a href="https://worlddefencenews.blogspot.com/" target="_blank" rel="noopener">World Defence News</a>, <a href="https://defence-blog.com/" target="_blank" rel="noopener">Defence Blog</a>, <a href="https://www.globalsecurity.org/index.html" target="_blank" rel="noopener">GlobalSecurity.org</a>, <a href="https://www.navaltoday.com/" target="_blank" rel="noopener">Naval Today</a>, <a href="https://www.airforce-technology.com/" target="_blank" rel="noopener">Airforce Technology</a>. Each story links to the specific article it was written from.</p><p>Articles are summaries written from the linked sources and can contain errors, so check the originals before relying on any claim. “Confirmed” means a primary source such as a company release. “Reported” and “Analysis” come from media or research groups. “Official claim” and “Company claim” have not been independently checked. Photos appear only where the source credits a US government or freely licensed image, and the credit is shown under the photo.</p></footer>
 </div>
 <script>
 const AR="Army Recognition",DP="The Defense Post",DIE="Defence Industry Europe";
@@ -833,7 +832,7 @@ function article(id){
  const i=items.find(x=>x.id==id);if(!i){location.hash="#/";return}
  app.innerHTML=`<div class="full"><a class="back" href="#/">← All stories</a>${meta(i)}<h2>${i.t}</h2><p class="lede">${i.s}</p>${fig(i)}${i.p.map(p=>`<p>${p}</p>`).join("")}
  <div class="srcs"><b>Sources</b><ul>${i.src.map(s=>`<li><a href="${s[1]}" target="_blank" rel="noopener">${s[0]}</a></li>`).join("")}</ul></div>
- <p class="note">Status “${i.st}” describes how well the central claim is backed. Check the sources above before relying on any detail.</p></div>`;
+ </div>`;
  document.title=i.t+" – Watchfloor";window.scrollTo(0,0);
 }
 function route(){const m=location.hash.match(/^#\/(.+)$/);m?article(m[1]):home()}

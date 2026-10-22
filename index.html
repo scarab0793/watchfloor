@@ -807,7 +807,7 @@ const CM=(f,w)=>"https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURI
 const fig=i=>{let u=i.img,c=i.cr;const k=typeof IMG!=="undefined"&&IMG[i.id];if(k){u=CM(k,640);c=`<a href="https://commons.wikimedia.org/wiki/File:${encodeURIComponent(k.replace(/ /g,"_"))}" target="_blank" rel="noopener">${esc(k.replace(/\.[A-Za-z]+$/,""))}</a>, Wikimedia Commons (free licence, author on the file page)`}
  else if(u&&u.indexOf("Special:FilePath")>0)u=u.replace("width=1200","width=640");
  if(!u&&typeof LOGO!=="undefined"&&LOGO[i.id]){const f=LOGO[i.id];return `<figure class="logo"><img src="${CM(f,360)}" alt="Company logo" loading="lazy" onerror="this.closest('figure').remove()"><figcaption>Company logo: <a href="https://commons.wikimedia.org/wiki/File:${encodeURIComponent(f.replace(/ /g,"_"))}" target="_blank" rel="noopener">${esc(f.replace(/\.[A-Za-z]+$/,""))}</a>, Wikimedia Commons. The logo is a trademark of its owner and is shown only to identify the company.</figcaption></figure>`}
- return u?`<figure><img src="${u}" alt="Photo for: ${esc(i.t)}" loading="lazy" onerror="this.closest('figure').remove()"><figcaption>Photo: ${c}</figcaption></figure>`:""};
+ return u?`<figure><img src="${u}" alt="Photo for: ${esc(i.t)}" loading="lazy" onerror="this.closest('figure').remove()"><figcaption>Illustration photo (file image, not from the reported event): ${c}</figcaption></figure>`:""};
 const card=(i,big)=>big?
  `<div>${fig(i)}${meta(i)}<h2><a href="#/${i.id}">${i.t}</a></h2><p>${i.s}</p><a class="more" href="#/${i.id}">Read the full article</a></div>`:
  `<article>${fig(i)}${meta(i)}<h3><a href="#/${i.id}">${i.t}</a></h3><p>${i.s}</p><a class="more" href="#/${i.id}">Read the full article</a></article>`;

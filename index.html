@@ -26,7 +26,7 @@ button,input{font:inherit;color:inherit}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 input[type=search]{background:var(--surface);border:1px solid var(--line);padding:6px 12px;border-radius:6px;width:200px;font-size:15px}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.lead{display:grid;grid-template-columns:1.6fr 1fr;gap:28px;padding-bottom:26px;border-bottom:1px solid var(--line)}
+.lead{display:block;padding-bottom:26px;border-bottom:1px solid var(--line)}
 .lead h2{font:700 clamp(30px,5vw,46px)/1 "Barlow Condensed",sans-serif;margin:6px 0 12px}
 .lead h2 a,article h3 a{color:inherit;text-decoration:none}
 .lead h2 a:hover,article h3 a:hover{text-decoration:underline}
@@ -824,7 +824,7 @@ function list(){
  if(!l.length){el.innerHTML='<p class="empty">No stories match. Clear the search or pick another region.</p>';return}
  const lead=l.find(i=>i.lead)||null;let h="";
  if(lead){const n=r=>items.filter(i=>i.r==r).length;
-  h+=`<section class="lead">${card(lead,true)}<aside class="side"><h4>This edition</h4><ul><li>${items.length} stories, each with a full article</li><li>USA ${n("USA")}, Europe ${n("Europe")}, Far East ${n("Far East")}, Middle East ${n("Middle East")}, Oceania ${n("Oceania")}</li><li>${items.filter(i=>i.w).length} on the Ukraine and Iran wars</li><li>${items.filter(i=>i.img).length} credited US government photos</li></ul></aside></section>`}
+  h+=`<section class="lead">${card(lead,true)}</section>`}
  h+='<section class="grid">'+l.filter(i=>i!==lead).map(i=>card(i)).join("")+"</section>";
  el.innerHTML=h;
 }

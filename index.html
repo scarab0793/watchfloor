@@ -918,7 +918,7 @@ function list(){
  const el=document.getElementById("list");if(!el)return;
  const l=items.filter(i=>(cat=="All"||(cat=="Wars"?i.w&&(sub=="All wars"||i.w==sub):i.r==cat))&&(i.t+i.s).toLowerCase().includes(term));
  if(!l.length){el.innerHTML='<p class="empty">No stories match. Clear the search or pick another region.</p>';return}
- const lead=l.find(i=>i.lead)||null;let h="";
+ const lead=l.reduce((b,i)=>tval(i.time)>tval(b.time)?i:b,l[0]);let h="";
  if(lead){const n=r=>items.filter(i=>i.r==r).length;
   h+=`<section class="lead">${card(lead,true)}</section>`}
  h+='<section class="grid">'+l.filter(i=>i!==lead).map(i=>card(i)).join("")+"</section>";
@@ -936,3 +936,5 @@ window.addEventListener("hashchange",route);route();
 </script>
 </body>
 </html>
+
+</body></html>

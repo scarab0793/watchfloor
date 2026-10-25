@@ -64,6 +64,7 @@ figure{margin:0 0 12px}figure img{width:100%;height:210px;object-fit:cover;displ
 footer{padding:28px 0 40px;color:var(--muted);font-size:14px}
 @media(max-width:720px){.lead{grid-template-columns:1fr}input[type=search]{width:100%}}
 .band{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin-top:18px}.band img{width:100%;height:clamp(100px,17vw,180px);object-fit:cover;display:block;background:var(--surface)}.bandcap{font-size:12px;color:var(--muted);margin:6px 0 0}.bandcap a{color:inherit}
+.cmts{border-top:1px solid var(--line);margin-top:26px;padding-top:16px}.cmts h3{font:700 26px "Barlow Condensed",sans-serif;margin:0 0 10px}
 </style>
 </head>
 <body>
@@ -962,7 +963,21 @@ function article(id){
  app.innerHTML=`<div class="full"><a class="back" href="#/">← Összes hír</a>${meta(i)}<h2>${i.t}</h2><p class="lede">${i.s}</p>${fig(i)}${i.p.map(p=>`<p>${p}</p>`).join("")}
  <div class="srcs"><b>Források</b><ul>${i.src.map(s=>`<li><a href="${s[1]}" target="_blank" rel="noopener">${s[0]}</a></li>`).join("")}</ul></div>
  </div>`;
- document.title=i.t+" – Watchfloor";window.scrollTo(0,0);
+ document.title=i.t+" – Watchfloor";window.scrollTo(0,0);comments(i.id);
+}
+
+/* ---------- comments (Disqus) ----------
+   Set DISQUS_SHORTNAME to the shortname of your Disqus site to switch comments on. Empty = off. */
+const DISQUS_SHORTNAME="",DISQUS_LANG="hu",DISQUS_PREFIX="hu-";
+function comments(id){
+ if(!DISQUS_SHORTNAME||!/^https?:$/.test(location.protocol))return;
+ const box=document.createElement("section");box.className="cmts";
+ box.innerHTML='<h3>'+"Hozzászólások"+'</h3><div id="disqus_thread"></div><p class="note">A hozzászólásokat a Disqus kezeli; a megjelenítéshez a Disqus cookie-kat használhat.</p>';
+ const full=document.querySelector(".full");if(!full)return;full.appendChild(box);
+ const cfg=function(){this.page.identifier=DISQUS_PREFIX+id;this.page.url=location.origin+location.pathname+"#/"+id;this.language=DISQUS_LANG};
+ if(window.DISQUS){DISQUS.reset({reload:true,config:cfg});return}
+ window.disqus_config=cfg;
+ const d=document.createElement("script");d.src="https://"+DISQUS_SHORTNAME+".disqus.com/embed.js";d.async=true;d.setAttribute("data-timestamp",+new Date());document.head.appendChild(d);
 }
 function route(){const m=location.hash.match(/^#\/(.+)$/);m?article(m[1]):home()}
 window.addEventListener("hashchange",route);route();

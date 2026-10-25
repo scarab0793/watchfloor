@@ -63,6 +63,7 @@ figure{margin:0 0 12px}figure img{width:100%;height:210px;object-fit:cover;displ
 .note{color:var(--muted);font-size:13px;margin-top:14px}
 footer{padding:28px 0 40px;color:var(--muted);font-size:14px}
 @media(max-width:720px){.lead{grid-template-columns:1fr}input[type=search]{width:100%}}
+.band{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin-top:18px}.band img{width:100%;height:clamp(100px,17vw,180px);object-fit:cover;display:block;background:var(--surface)}.bandcap{font-size:12px;color:var(--muted);margin:6px 0 0}.bandcap a{color:inherit}
 </style>
 </head>
 <body>
@@ -72,6 +73,8 @@ footer{padding:28px 0 40px;color:var(--muted);font-size:14px}
   <h1 class="logo"><a href="#/">Watch<span>floor</span></a></h1>
   <p class="tag">Katonai és védelmi ipari hírek az USA-ból, Európából, a Távol-Keletről, a Közel-Keletről, Óceániából és Oroszországból, minden történethez teljes cikkel.</p>
  </div>
+<div class="band"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/F-22_Raptor_-_070713-F-0986R-003.jpg?width=640" alt="F-22 Raptor vadászgép" onerror="this.remove()"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/K2_black_panther.jpg?width=640" alt="K2 Black Panther harckocsi" onerror="this.remove()"><img src="https://commons.wikimedia.org/wiki/Special:FilePath/HMAS_Hobart_(D39).jpg?width=640" alt="HMAS Hobart romboló" onerror="this.remove()"></div>
+ <p class="bandcap">Illusztrációs fotók: <a href="https://commons.wikimedia.org/wiki/File:F-22_Raptor_-_070713-F-0986R-003.jpg" target="_blank" rel="noopener">F-22 Raptor</a>, <a href="https://commons.wikimedia.org/wiki/File:K2_black_panther.jpg" target="_blank" rel="noopener">K2 Black Panther</a>, <a href="https://commons.wikimedia.org/wiki/File:HMAS_Hobart_(D39).jpg" target="_blank" rel="noopener">HMAS Hobart (D39)</a>, Wikimedia Commons (szabad licenc, a szerzők a fájloldalakon szerepelnek).</p>
 </header>
 <div id="app"></div>
 </div>
@@ -967,6 +970,7 @@ window.addEventListener("hashchange",route);route();
 </body>
 </html>
 
+</body></html>
 </body></html>
 </body></html>
 </body></html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en" id="html">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Watchfloor – defence and military news</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e8e9e2;--surface:#f3f4ee;--ink:#1d2822;--muted:#5b675f;--line:#c4c8bc;--accent:#c8431f;--ok:#2f6b46;--warn:#9a6a00}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141b17;--surface:#1c2621;--ink:#e6e9e1;--muted:#97a399;--line:#33403a;--accent:#ff7a52;--ok:#6fc08f;--warn:#e0b04a}}
+:root[data-theme="dark"]{--bg:#141b17;--surface:#1c2621;--ink:#e6e9e1;--muted:#97a399;--line:#33403a;--accent:#ff7a52;--ok:#6fc08f;--warn:#e0b04a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 "Source Serif 4",Georgia,serif}
+.wrap{max-width:1240px;margin:0 auto;padding:0 20px}
+header{padding:28px 0 18px;border-bottom:3px solid var(--ink)}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap}
+h1.logo{font:700 clamp(40px,8vw,72px)/.9 "Barlow Condensed","Arial Narrow",sans-serif;margin:0;letter-spacing:.01em}
+h1.logo a{color:inherit;text-decoration:none}
+h1.logo span{color:var(--accent)}
+.demo{background:var(--surface);border-left:4px solid var(--warn);padding:10px 14px;margin:18px 0;font-size:14px;color:var(--muted)}
+.tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:8px 0 14px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+button,input{font:inherit;color:inherit}
+.chip{background:none;border:1px solid var(--line);padding:5px 12px;border-radius:99px;cursor:pointer;font-size:14px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+input[type=search]{background:var(--surface);border:1px solid var(--line);padding:6px 12px;border-radius:6px;width:200px;font-size:15px}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.lead{display:block;padding-bottom:26px;border-bottom:1px solid var(--line)}
+.lead h2{font:700 clamp(30px,5vw,46px)/1 "Barlow Condensed",sans-serif;margin:6px 0 12px}
+.lead h2 a,article h3 a{color:inherit;text-decoration:none}
+.lead h2 a:hover,article h3 a:hover{text-decoration:underline}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:0 28px}
+article{padding:20px 0;border-bottom:1px solid var(--line)}
+article h3{font:700 24px/1.1 "Barlow Condensed",sans-serif;margin:4px 0 8px}
+article p{margin:0 0 8px}
+.more{font-size:14px;font-weight:600;color:var(--accent);text-decoration:none}
+.meta{font-size:13px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.cat{color:var(--accent);font-weight:600}
+.st{font-weight:600}.st.c{color:var(--ok)}.st.u{color:var(--warn)}
+.src a{color:inherit}
+.side{background:var(--surface);padding:16px 18px;align-self:start;border-top:3px solid var(--accent)}
+.side h4{font:700 20px "Barlow Condensed",sans-serif;margin:0 0 8px}
+.side ul{margin:0;padding-left:18px;font-size:15px}
+figure{margin:0 0 12px}figure img{width:100%;height:210px;object-fit:cover;display:block;background:var(--surface)}.full figure img{height:auto;max-height:340px}.lead figure img{height:auto;max-height:300px}figure.logo img{height:96px;object-fit:contain;background:#fff;padding:14px;border:1px solid var(--line);border-radius:4px}.full figure.logo img,.lead figure.logo img{height:96px;max-height:96px;width:auto;max-width:100%}.hp{display:grid;grid-template-columns:270px minmax(0,1fr);gap:32px;align-items:start}.hpmain{min-width:0}
+.feed{position:sticky;top:12px;background:var(--surface);border-top:3px solid var(--accent);padding:14px 16px;margin-top:18px;max-height:calc(100vh - 24px);overflow:auto}
+.feed h4{font:700 22px "Barlow Condensed",sans-serif;margin:0}.fsub{margin:0 0 10px;font-size:13px;color:var(--muted)}
+.feed ul{list-style:none;margin:0;padding:0}.feed li{padding:10px 0;border-top:1px solid var(--line);font-size:15px;line-height:1.3}
+.feed li a{color:inherit;text-decoration:none;font-weight:600}.feed li a:hover{text-decoration:underline}
+.fmeta{display:block;font-size:12px;color:var(--muted);margin-bottom:2px}.fmeta b{text-transform:uppercase;letter-spacing:.04em}.fmeta b.ua{color:var(--ok)}.fmeta b.ir{color:var(--accent)}.fmeta b.ga{color:var(--warn)}
+@media(max-width:900px){.hp{grid-template-columns:1fr;gap:0}.feed{position:static;max-height:none}.feed li:nth-child(n+6){display:none}}
+.art svg{width:100%;height:auto;display:block}figcaption{font-size:12px;color:var(--muted);margin-top:4px}
+.empty{padding:40px 0;color:var(--muted)}
+.full{max-width:720px;margin:0 auto;padding:22px 0 10px}
+.back{display:inline-block;margin-bottom:14px;color:var(--accent);font-weight:600;text-decoration:none;font-size:15px}
+.full h2{font:700 clamp(34px,6vw,54px)/1 "Barlow Condensed",sans-serif;margin:8px 0 14px}
+.full .lede{font-size:20px;line-height:1.45;color:var(--ink);margin:0 0 18px;font-weight:600}
+.full p{margin:0 0 16px}
+.cav{background:var(--surface);border-left:4px solid var(--warn);padding:12px 16px;margin:22px 0;font-size:15px}
+.cav b{display:block;margin-bottom:4px}
+.srcs{border-top:1px solid var(--line);padding-top:14px;margin-top:22px;font-size:15px}
+.srcs ul{margin:6px 0 0;padding-left:18px}
+.note{color:var(--muted);font-size:13px;margin-top:14px}
+footer{padding:28px 0 40px;color:var(--muted);font-size:14px}
+@media(max-width:720px){.lead{grid-template-columns:1fr}input[type=search]{width:100%}}
+.band{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin-top:18px}.band img{width:100%;height:clamp(100px,17vw,180px);object-fit:cover;display:block;background:var(--surface)}.bandcap{font-size:12px;color:var(--muted);margin:6px 0 0}.bandcap a{color:inherit}
+.langs{display:flex;flex-wrap:wrap;gap:4px}.lang{font:600 13px/1 "Barlow Condensed","Arial Narrow",sans-serif;letter-spacing:.06em;padding:8px 10px;min-width:40px;min-height:32px;border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}.lang[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+ <div class="top">
+  <h1 class="logo"><a href="#/">Watch<span>floor</span></a></h1>
+  <div class="langs" id="langs" role="group"></div>
+ </div>
+<div class="band" id="band"></div>
+ <p class="bandcap" id="bandcap"></p>
+</header>
+<div id="app"></div>
+</div>
+<script>
+/*@@HEAD@@*/
+/*@@ITEMS@@*/
+/*@@I18N@@*/
+
+/* ---------- app ---------- */
+let cat="All",sub="All wars",term="";
+let lang="en";try{const s=localStorage.getItem("wf-lang");if(s&&UI[s])lang=s;else{const n=(navigator.language||"en").slice(0,2).toLowerCase();if(UI[n])lang=n}}catch(e){}
+const U=()=>UI[lang],S=()=>UI[lang].s;
+items.forEach(i=>{i._o={t:i.t,s:i.s,p:i.p}});
+function applyLang(){items.forEach(i=>{const h=(lang!="en"&&TR[lang]&&TR[lang][i.id])||i._o;i.t=h.t;i.s=h.s;i.p=h.p});document.getElementById("html").lang=lang}
+const app=document.getElementById("app");
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
+const label=i=>(i.w?(U().war[i.w]||i.w):(U().reg[i.r]||i.r))+", "+(U().cat[i.c]||i.c);
+const stc=i=>i.st=="Confirmed"?"c":"u";
+const srcLinks=i=>i.src.map(s=>`<a href="${s[1]}" target="_blank" rel="noopener">${s[0]}</a>`).join(", ");
+const MN=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const fdate=t=>{const m=String(t).match(/(\d{1,2})\s+([A-Za-z]{3})/);const k=MN.indexOf(m&&m[2]);if(!m||k<0)return t;return U().fmt.replace("D",+m[1]).replace("M",U().mon[k])};
+const meta=i=>`<div class="meta"><span class="cat">${label(i)}</span><span class="st ${stc(i)}">${U().st[i.st]||i.st}</span><span>${fdate(i.time)}</span></div>`;
+
+const ICON={
+missile:'<path d="M70 90H210Q250 90 270 80Q250 70 210 70H70Z"/><path d="M90 70L112 44L134 70M90 90L112 116L134 90"/><path class="a" d="M16 80H58" stroke-dasharray="8 6"/>',
+ship:'<path d="M50 100H270L246 126H80Z"/><path d="M118 100V78H206V100M162 78V48M140 78V64H184V78"/><path class="a" d="M30 140q20-10 40 0t40 0t40 0t40 0t40 0t40 0"/>',
+sub:'<ellipse cx="160" cy="88" rx="104" ry="25"/><path d="M144 64V46H176V64M160 46V32H172"/><path d="M264 88l24-16v32z"/><path class="a" d="M24 130q20-10 40 0t40 0t40 0t40 0t40 0t40 0t40 0"/>',
+jet:'<path d="M30 80L128 72L186 28H206L182 74L268 78L292 68V92L268 82L182 86L206 132H186L128 88L30 80Z"/><path class="a" d="M10 80H26" stroke-dasharray="6 4"/>',
+drone:'<rect x="136" y="68" width="48" height="26" rx="8"/><path d="M136 70L100 48M184 70L220 48M136 92L100 114M184 92L220 114"/><ellipse cx="96" cy="46" rx="26" ry="5"/><ellipse cx="224" cy="46" rx="26" ry="5"/><ellipse cx="96" cy="116" rx="26" ry="5"/><ellipse cx="224" cy="116" rx="26" ry="5"/>',
+tank:'<path d="M60 102H260L246 126H76Z"/><path d="M122 102L136 80H196L210 102"/><path d="M196 90H286"/><circle class="a" cx="100" cy="114" r="6"/><circle class="a" cx="140" cy="114" r="6"/><circle class="a" cx="180" cy="114" r="6"/><circle class="a" cx="220" cy="114" r="6"/>',
+sat:'<rect x="138" y="62" width="44" height="36" rx="4"/><rect x="60" y="70" width="64" height="20"/><rect x="196" y="70" width="64" height="20"/><path d="M124 80H138M182 80H196M160 62V46"/><path class="a" d="M140 34q20-18 40 0M148 40q12-9 24 0"/>',
+wave:'<circle cx="90" cy="80" r="8"/><path class="a" d="M116 56q24 24 0 48M140 40q40 40 0 80M164 24q56 56 0 112"/><path d="M230 60h40v40h-40z"/>',
+balloon:'<ellipse cx="160" cy="62" rx="44" ry="50"/><path d="M130 100L150 126H170L190 100M150 126V140H170V126"/>',
+shield:'<path d="M160 26L232 52V94Q232 128 160 150Q88 128 88 94V52Z"/><path class="a" d="M126 88l24 22l44-44"/>'};
+const KIND={Missiles:"missile",Artillery:"missile","Air defence":"missile","Missile defence":"missile",Naval:"ship",Shipbuilding:"ship",Submarines:"sub",Underwater:"sub",Air:"jet",Helicopters:"jet","Naval air":"jet",Drones:"drone","Military AI":"drone",Land:"tank",Marines:"tank","Small arms":"tank",Space:"sat",Lasers:"wave","Electronic warfare":"wave",Balloons:"balloon"};
+const art=i=>`<svg viewBox="0 0 320 160" role="img" aria-label="${S().artAria}: ${esc(i.c)}"><rect width="320" height="160" fill="#1f2b25"/><g fill="none" stroke="#e6e9e1" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">${ICON[KIND[i.c]||"shield"]}</g><style>.a{stroke:#ff7a52}</style></svg>`;
+const CM=(f,w)=>"https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(f.replace(/ /g,"_")).replace(/%28/g,"(").replace(/%29/g,")")+"?width="+w;
+const fig=i=>{let u=i.img,c=i.cr;const k=typeof IMG!=="undefined"&&IMG[i.id];if(k){u=CM(k,640);c=`<a href="https://commons.wikimedia.org/wiki/File:${encodeURIComponent(k.replace(/ /g,"_"))}" target="_blank" rel="noopener">${esc(k.replace(/\.[A-Za-z]+$/,""))}</a>, ${S().lic}`}
+ else if(u&&u.indexOf("Special:FilePath")>0)u=u.replace("width=1200","width=640");
+ if(!u&&typeof LOGO!=="undefined"&&LOGO[i.id]){const f=LOGO[i.id];return `<figure class="logo"><img src="${CM(f,360)}" alt="${S().logoAlt}" loading="lazy" onerror="this.closest('figure').remove()"><figcaption>${S().logoCap} <a href="https://commons.wikimedia.org/wiki/File:${encodeURIComponent(f.replace(/ /g,"_"))}" target="_blank" rel="noopener">${esc(f.replace(/\.[A-Za-z]+$/,""))}</a>, ${S().logoCap2}</figcaption></figure>`}
+ return u?`<figure><img src="${u}" alt="${S().photoAlt} ${esc(i.t)}" loading="lazy" onerror="this.closest('figure').remove()"><figcaption>${S().photoCap} ${c}</figcaption></figure>`:""};
+const card=(i,big)=>big?
+ `<div>${fig(i)}${meta(i)}<h2><a href="#/${i.id}">${i.t}</a></h2><p>${i.s}</p><a class="more" href="#/${i.id}">${S().more}</a></div>`:
+ `<article>${fig(i)}${meta(i)}<h3><a href="#/${i.id}">${i.t}</a></h3><p>${i.s}</p><a class="more" href="#/${i.id}">${S().more}</a></article>`;
+const MON={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+const tval=t=>{const m=String(t).match(/(\d{1,2})\s+([A-Za-z]{3})/);return m&&MON[m[2]]!==undefined?MON[m[2]]*100+ +m[1]:0};
+{const s=items.map((i,k)=>[i,k]).sort((a,b)=>tval(b[0].time)-tval(a[0].time)||a[1]-b[1]).map(x=>x[0]);items.splice(0,items.length,...s)}
+function warFeed(){
+ const w=items.map((i,k)=>[i,k]).filter(x=>x[0].w).sort((a,b)=>tval(b[0].time)-tval(a[0].time)||a[1]-b[1]).slice(0,14);
+ return `<ul>${w.map(([i])=>`<li><span class="fmeta"><b class="${i.w=="Ukraine"?"ua":i.w=="Gaza"?"ga":"ir"}">${esc(U().war[i.w]||i.w)}</b> · ${esc(fdate(i.time))}</span><a href="#/${i.id}">${i.t}</a></li>`).join("")}</ul>`}
+function home(){
+ const n=r=>items.filter(i=>i.r==r).length;
+ let h=`
+ <div class="tools"><div class="chips" id="chips" role="group" aria-label="${S().filterRegion}">${cats.map(c=>`<button class="chip" data-c="${c}" aria-pressed="${c==cat}">${U().reg[c]||c}</button>`).join("")}</div>
+ <input type="search" id="q" placeholder="${S().search}" aria-label="${S().search}" value="${esc(term)}"></div>`;
+ if(cat=="Wars")h+=`<div class="chips" style="margin-bottom:14px" role="group" aria-label="${S().filterWars}">${subs.map(c=>`<button class="chip" data-s="${c}" aria-pressed="${c==sub}">${U().war[c]||c}</button>`).join("")}</div>`;
+ h+='<main id="list"></main>';
+ app.innerHTML=`<div class="hp"><aside class="feed" aria-label="${S().feedAria}"><h4>${S().feedTitle}</h4><p class="fsub">${S().feedSub}</p>${warFeed()}</aside><div class="hpmain">${h}</div></div>`;
+ app.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{cat=b.dataset.c;home();list()});
+ app.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{sub=b.dataset.s;home();list()});
+ document.getElementById("q").oninput=e=>{term=e.target.value.toLowerCase();list()};
+ list();document.title=U().titleHome;
+}
+function list(){
+ const el=document.getElementById("list");if(!el)return;
+ const l=items.filter(i=>(cat=="All"||(cat=="Wars"?i.w&&(sub=="All wars"||i.w==sub):i.r==cat))&&(i.t+i.s).toLowerCase().includes(term));
+ if(!l.length){el.innerHTML=`<p class="empty">${S().none}</p>`;return}
+ const lead=l.reduce((b,i)=>tval(i.time)>tval(b.time)?i:b,l[0]);let h="";
+ if(lead){const n=r=>items.filter(i=>i.r==r).length;
+  h+=`<section class="lead">${card(lead,true)}</section>`}
+ h+='<section class="grid">'+l.filter(i=>i!==lead).map(i=>card(i)).join("")+"</section>";
+ el.innerHTML=h;
+}
+function article(id){
+ const i=items.find(x=>x.id==id);if(!i){location.hash="#/";return}
+ app.innerHTML=`<div class="full"><a class="back" href="#/">${S().back}</a>${meta(i)}<h2>${i.t}</h2><p class="lede">${i.s}</p>${fig(i)}${i.p.map(p=>`<p>${p}</p>`).join("")}
+ <div class="srcs"><b>${S().src}</b><ul>${i.src.map(s=>`<li><a href="${s[1]}" target="_blank" rel="noopener">${s[0]}</a></li>`).join("")}</ul></div>
+ </div>`;
+ document.title=i.t+" – Watchfloor";window.scrollTo(0,0);
+}
+function chrome(){
+ const lg=document.getElementById("langs");lg.setAttribute("aria-label",S().langAria);
+ lg.innerHTML=Object.keys(UI).map(k=>`<button type="button" class="lang" lang="${k}" data-l="${k}" title="${esc(UI[k].name)}" aria-pressed="${k==lang}">${k.toUpperCase()}</button>`).join("");
+ lg.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{lang=b.dataset.l;try{localStorage.setItem("wf-lang",lang)}catch(e){}applyLang();chrome();route()});
+ const F=[["F-22_Raptor_-_070713-F-0986R-003.jpg","F-22 Raptor"],["K2_black_panther.jpg","K2 Black Panther"],["HMAS_Hobart_(D39).jpg","HMAS Hobart (D39)"]];
+ document.getElementById("band").innerHTML=F.map((f,k)=>`<img src="https://commons.wikimedia.org/wiki/Special:FilePath/${f[0]}?width=640" alt="${esc(S().band[k])}" onerror="this.remove()">`).join("");
+ document.getElementById("bandcap").innerHTML=S().bandcap+" "+F.map(f=>`<a href="https://commons.wikimedia.org/wiki/File:${f[0]}" target="_blank" rel="noopener">${f[1]}</a>`).join(", ")+", "+S().bandcap2;
+ document.title=U().title;
+}
+function route(){const m=location.hash.match(/^#\/(.+)$/);m?article(m[1]):home()}
+window.addEventListener("hashchange",route);applyLang();chrome();route();
+</script>
+</body>
+</html>
+

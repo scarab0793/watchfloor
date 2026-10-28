@@ -1,6 +1,8 @@
 # Watchfloor – projekt-brief (átvitelhez)
 
 ## Mi ez
+**Cél: az Euronews-hoz hasonlóan többnyelvű oldal** – egyetlen Watchfloor, fejlécben nyelvválasztó (EN, FR, DE, ES, HU, PL, CS, SK, PT), a választott nyelv megjegyzése, nyelvenként saját URL (pl. `/fr/`, `/de/`) vagy `?lang=`; a tartalom mindig ugyanaz a hírlista, csak a megjelenített szöveg és a felületi címkék (régió, státusz, téma, dátum, kereső, gombok) váltanak.
+
 A Watchfloor egy többnyelvű védelmi/katonai híroldal. Célnyelvek (9): **angol (EN, forrásnyelv), francia (FR), német (DE), spanyol (ES), magyar (HU), lengyel (PL), cseh (CS), szlovák (SK), portugál (PT)**. Jelenleg csak az EN és a HU él; a többi nyelv még nincs megépítve. Az oldal egyetlen önálló HTML-fájl (CSS + JS beágyazva), a tartalom egy JS `items` tömbben van; a nézet hash-routinggal (`#/`, `#/a/<id>`) működik. Szűrők: régió (USA, Europe, Far East, Middle East, Oceania, Russia), háborúk (Ukraine, Iran and Gulf, Gaza), kereső, oldalsáv-feed.
 
 ## Hol él
@@ -46,7 +48,7 @@ Az angol tartalmat (új hírek az `items` tömb elejére, forrásokkal és `cav`
 
 ## Nyitott pontok
 - A 7 hiányzó nyelv (FR, DE, ES, PL, CS, SK, PT) megépítése: első körben a teljes archívum lefordítása (~370 hír × 7 nyelv – nagy munka, érdemes nyelvenként külön munkamenetben/szakaszokban), utána a napi szinkron.
-- Döntendő: külön artifact + fájl nyelvenként (mint a HU), vagy egyetlen oldal nyelvválasztóval és közös fordítás-adatfájllal (kevesebb duplikáció, könnyebb karbantartás).
+- Eldöntött irány: egyetlen oldal nyelvválasztóval és nyelvenkénti fordítás-adatokkal (a külön-külön oldalas HU-modell helyett), hogy ne kelljen 9 teljes példányt karbantartani. Ehhez a HU-oldal címke-térképeit (`HR`, `HW`, `HC`, `HS`, `HST`, `HCAT`, `hutime`) nyelvi szótárrá kell általánosítani.
 - Duplikált `f22-tsuiki-keen-sword` id javítása.
 - Az artifactok külső képeket töltenek (Wikimedia) – az artifact CSP blokkolja őket, a publikus GitHub Pages változatban működnek; ha fontos, data URI-ra cserélendő.
 - Az angol frissítő feladat pontos promptját nem ebből a munkamenetből ismerem – azt az ütemezett feladatok közül kell kimásolni.

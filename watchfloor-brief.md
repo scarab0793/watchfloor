@@ -1,7 +1,7 @@
 # Watchfloor – projekt-brief (átvitelhez)
 
 ## Mi ez
-A Watchfloor egy angol és magyar nyelvű védelmi/katonai híroldal. Az oldal egyetlen önálló HTML-fájl (CSS + JS beágyazva), a tartalom egy JS `items` tömbben van; a nézet hash-routinggal (`#/`, `#/a/<id>`) működik. Szűrők: régió (USA, Europe, Far East, Middle East, Oceania, Russia), háborúk (Ukraine, Iran and Gulf, Gaza), kereső, oldalsáv-feed.
+A Watchfloor egy többnyelvű védelmi/katonai híroldal. Célnyelvek (9): **angol (EN, forrásnyelv), francia (FR), német (DE), spanyol (ES), magyar (HU), lengyel (PL), cseh (CS), szlovák (SK), portugál (PT)**. Jelenleg csak az EN és a HU él; a többi nyelv még nincs megépítve. Az oldal egyetlen önálló HTML-fájl (CSS + JS beágyazva), a tartalom egy JS `items` tömbben van; a nézet hash-routinggal (`#/`, `#/a/<id>`) működik. Szűrők: régió (USA, Europe, Far East, Middle East, Oceania, Russia), háborúk (Ukraine, Iran and Gulf, Gaza), kereső, oldalsáv-feed.
 
 ## Hol él
 - **Angol oldal**: privát Claude artifact – https://claude.ai/artifact/8XQjjXKdvnoH2uoG7jV9wG
@@ -9,6 +9,7 @@ A Watchfloor egy angol és magyar nyelvű védelmi/katonai híroldal. Az oldal e
 - **GitHub repó**: `scarab0793/watchfloor` (main ágra push)
   - `index.html` = angol, `hu.html` = magyar
   - Publikus: https://scarab0793.github.io/watchfloor/ és https://scarab0793.github.io/watchfloor/hu.html (a repóban CNAME is van)
+- Tervezett fájlok a többi nyelvhez: `fr.html`, `de.html`, `es.html`, `pl.html`, `cs.html`, `sk.html`, `pt.html` (+ külön privát artifact mindegyikhez, mint a HU-nál); nyelvváltó az oldalak fejlécében.
 - Állapot (2026-10-28): ~369 egyedi hír; a legutóbbi szinkron 15 hírt fordított le.
 
 ## Adatmodell
@@ -19,13 +20,13 @@ Egy hír (`items` elem): `{id, r | w, c, st, time, t, s, p[], cav, src}`
 - Képek: `LOGO` és `IMG` map (id → Wikimedia Commons fájlnév); a fejléc három illusztrációs fotót mutat.
 - Ismert hiba: az angol tömbben az `f22-tsuiki-keen-sword` id kétszer szerepel (eltérő bekezdésszámmal) – érdemes egyesíteni.
 
-## Magyar kiadás működése
-- A magyar oldal `items` tömbje szó szerint az angol; az elemek angolok maradnak (a szűrők és a dátum szerinti rendezés miatt).
-- A tömb után `const HU={id:{t,s,p}}` felülírja a megjelenített szöveget, majd címke-térképek: `HR`, `HW`, `HC`, `HS`, `HST`, `HCAT`, `hutime`, végül `items.forEach(...)` alkalmazza a HU-t.
-- Új `c` témaérték esetén `HCAT`-ba magyar címke kell.
-- Fordítási szabályok: természetes, pontos magyar; nevek, számok, mértékegységek, dátumok pontosak; magyar idézőjel („ ”); a bekezdésszám egyezzen az angollal; MI-re nem utalunk.
+## Nyelvi kiadások működése (a HU a minta, a többi nyelv ugyanígy épül)
+- Minden nyelvi oldal `items` tömbje szó szerint az angol; az elemek angolok maradnak (a szűrők és a dátum szerinti rendezés miatt).
+- A tömb után nyelvenként egy fordítás-objektum (HU-nál `const HU={id:{t,s,p}}`; más nyelvnél pl. `FR`, `DE`, …) felülírja a megjelenített szöveget, majd címke-térképek (HU-nál): `HR`, `HW`, `HC`, `HS`, `HST`, `HCAT`, `hutime`, végül `items.forEach(...)` alkalmazza a HU-t.
+- Új `c` témaérték esetén minden nyelv saját `HCAT`-jába címke kell.
+- Fordítási szabályok (minden nyelvre): természetes, pontos nyelvhasználat; nevek, számok, mértékegységek, dátumok pontosak; nyelvspecifikus idézőjel (HU „ ”, DE „ “, FR « », PL „ ”, CS/SK „ “, ES/PT « » vagy “ ”); a bekezdésszám egyezzen az angollal; MI-re nem utalunk.
 
-## Szinkron-folyamat (ez fut ütemezetten)
+## Szinkron-folyamat (jelenleg HU-ra fut ütemezetten; a többi nyelvre ugyanígy kell, nyelvenként külön feladat vagy egy közös, 8 nyelvet végigvivő feladat)
 1. Mindkét artifact beolvasása (Artifact `read`), mentés fájlba, a `<!DOCTYPE html>`…`</html>` rész használata.
 2. Hiányzó HU-bejegyzések keresése (angol id-k, amiknek nincs HU-ja); ha nincs eltérés, nincs teendő.
 3. Magyar oldal frissítése: angol `items` átmásolása szó szerint + új fordítások a HU-ba; mást nem módosítunk.
@@ -40,10 +41,12 @@ Az angol tartalmat (új hírek az `items` tömb elejére, forrásokkal és `cav`
 - Ez a brief mint projekt-utasítás (Project instructions).
 - Fájlok a projekt tudásbázisába: `index.html`, `hu.html` (vagy a repó csatlakoztatása).
 - Mindkét artifact URL és a repó neve (fent).
-- Ütemezett feladatok: a HU-szinkron (és az angol frissítő) promptja – ezeket az ütemezett feladatok listájában kell megnézni/átállítani az új projektre.
+- Ütemezett feladatok: a HU-szinkron (és az új nyelvek szinkronja) (és az angol frissítő) promptja – ezeket az ütemezett feladatok listájában kell megnézni/átállítani az új projektre.
 - Elérések: GitHub-konnektor (`scarab0793/watchfloor`), Artifact-eszköz (a két artifact tulajdonosa ugyanaz a fiók kell legyen, különben a publikálás elutasításra kerül).
 
 ## Nyitott pontok
+- A 7 hiányzó nyelv (FR, DE, ES, PL, CS, SK, PT) megépítése: első körben a teljes archívum lefordítása (~370 hír × 7 nyelv – nagy munka, érdemes nyelvenként külön munkamenetben/szakaszokban), utána a napi szinkron.
+- Döntendő: külön artifact + fájl nyelvenként (mint a HU), vagy egyetlen oldal nyelvválasztóval és közös fordítás-adatfájllal (kevesebb duplikáció, könnyebb karbantartás).
 - Duplikált `f22-tsuiki-keen-sword` id javítása.
 - Az artifactok külső képeket töltenek (Wikimedia) – az artifact CSP blokkolja őket, a publikus GitHub Pages változatban működnek; ha fontos, data URI-ra cserélendő.
 - Az angol frissítő feladat pontos promptját nem ebből a munkamenetből ismerem – azt az ütemezett feladatok közül kell kimásolni.

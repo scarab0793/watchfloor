@@ -84,11 +84,24 @@ def main():
     errors = []
     for source in sources:
         try:
-            req = urllib.request.Request(source["url"], headers={"User-Agent": "WatchFloorFeedCollector/0.1 (news aggregation)"})
-            with urllib.request.urlopen(req, timeout=20) as response:
-                content = response.read(2_000_000)
+            entries = None
+            failures = []
+            for feed_url in source.get("urls", [source.get("url")]):
+                try:
+                    req = urllib.request.Request(feed_url, headers={"User-Agent": "Mozilla/5.0 (compatible; WatchFloorFeedCollector/0.2)"})
+                    with urllib.request.urlopen(req, timeout=20) as response:
+                        content = response.read(2_000_000)
+                    entries = list(parse(content))
+                    if not entries:
+                        raise ValueError("Feed contains no entries")
+                    print("SOURCE OK", source["name"], feed_url, "entries:", len(entries))
+                    break
+                except (OSError, ET.ParseError, ValueError) as exc:
+                    failures.append(f"{feed_url}: {type(exc).__name__}: {exc}")
+            if entries is None:
+                raise ValueError("; ".join(failures))
             count = 0
-            for title, url, published, summary in parse(content):
+            for title, url, published, summary in entries:
                 when = date(published)
                 title, url = clean(title), canonical_url(url or "")
                 if not (title and url and when and CUTOFF <= when <= NOW + dt.timedelta(hours=1)):

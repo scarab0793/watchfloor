@@ -230,6 +230,8 @@ def html_fallback(source):
         seen.add(link)
         rows.append((html.unescape(title), link, published, summary))
     print("HTML DISCOVERY", source["name"], "links:", len(rows))
+    for title, link, _, _ in rows[:3]:
+        print("HTML SAMPLE", source["name"], link[:180])
     dated = []
     for title, link, _, summary in rows[:12]:
         try:
@@ -237,10 +239,14 @@ def html_fallback(source):
             if not metadata:
                 continue
             headline, when = metadata
+            if when:
+                print("HTML ARTICLE DATE", source["name"], when.isoformat(), link[:130])
+            else:
+                print("HTML ARTICLE UNDATED", source["name"], link[:130])
             if when and CUTOFF <= when <= NOW + dt.timedelta(hours=1):
                 dated.append((headline or title, link, when.isoformat(), summary))
         except (OSError, ValueError) as exc:
-            print("HTML ARTICLE WARNING", source["name"], type(exc).__name__)
+            print("HTML ARTICLE WARNING", source["name"], type(exc).__name__, str(exc)[:120])
     print("HTML DATED", source["name"], "articles:", len(dated))
     return dated
 

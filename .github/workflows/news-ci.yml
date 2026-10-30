@@ -24,6 +24,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Remove cached candidates so test measures this run only
+        run: rm -f automation/candidates.json
       - name: Fetch public RSS feeds (no publishing)
         run: python automation/collect.py
       - name: Check candidate count
@@ -34,8 +36,13 @@ jobs:
           p = Path("automation/candidates.json")
           rows = json.loads(p.read_text()) if p.exists() else []
           print("Fresh candidate articles:", len(rows))
-          if not rows:
-              raise SystemExit("No recent articles collected; inspect source URLs and logs")
+          from datetime import datetime, timezone, timedelta
+          now = datetime.now(timezone.utc)
+          fresh = [x for x in rows if now - timedelta(hours=48) <= datetime.fromisoformat(x["published"]) <= now + timedelta(hours=1)]
+          sources = {x["source"] for x in fresh}
+          print("Verified fresh articles:", len(fresh), "from", len(sources), "sources:", ", ".join(sorted(sources)))
+          if len(fresh) < 20 or len(sources) < 5:
+              raise SystemExit("Collector FAILED: need at least 20 fresh articles from 5 independent sources")
           for item in rows[:5]:
               print(item["source"], item["published"], item["title"][:100])
           PY

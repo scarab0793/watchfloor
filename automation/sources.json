@@ -11,7 +11,8 @@
       "name": "The Defense Post",
       "urls": [
         "https://thedefensepost.com/feed/"
-      ]
+      ],
+      "html_url": "https://thedefensepost.com/"
     },
     {
       "name": "Defense One",
@@ -32,7 +33,8 @@
       "urls": [
         "https://www.armyrecognition.com/feed",
         "https://www.armyrecognition.com/rss"
-      ]
+      ],
+      "html_url": "https://www.armyrecognition.com/"
     },
     {
       "name": "Naval Today",
@@ -57,7 +59,8 @@
       "urls": [
         "https://www.defenseworld.net/rss",
         "https://www.defenseworld.net/feed"
-      ]
+      ],
+      "html_url": "https://www.defenseworld.net/"
     },
     {
       "name": "Airforce Technology",
@@ -76,7 +79,8 @@
       "urls": [
         "https://www.rusi.org/rss.xml",
         "https://www.rusi.org/feed"
-      ]
+      ],
+      "html_url": "https://www.rusi.org/"
     },
     {
       "name": "Militarnyi",
@@ -89,13 +93,15 @@
       "urls": [
         "https://www.military.com/rss-feeds/content?type=news",
         "https://www.military.com/rss-feeds"
-      ]
+      ],
+      "html_url": "https://www.military.com/daily-news"
     },
     {
       "name": "GlobalSecurity.org",
       "urls": [
         "https://www.globalsecurity.org/rss/"
-      ]
+      ],
+      "html_url": "https://www.globalsecurity.org/military/"
     },
     {
       "name": "Rocket Science",

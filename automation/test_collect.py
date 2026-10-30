@@ -20,6 +20,17 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(collect.date("Fri, 30 Oct 2026 09:00:00 GMT").tzinfo, dt.timezone.utc)
         self.assertIsNone(collect.date("invalid"))
 
+    def test_classification(self):
+        self.assertEqual(collect.classify("Russian drone strikes Ukraine", ""), "Ukraine")
+        self.assertEqual(collect.classify("Iran launches missile", ""), "Iran")
+        self.assertEqual(collect.classify("Gaza ceasefire negotiations", ""), "Gaza")
+        self.assertEqual(collect.classify("NATO tests new radar", ""), "Defence & security")
+        self.assertEqual(collect.classify("Iran and Israel exchange warnings", ""), "Multiple conflicts")
+
+    def test_canonical_url(self):
+        self.assertEqual(collect.canonical_url("https://EXAMPLE.org/a?utm_source=x&v=1#part"), "https://example.org/a?v=1")
+        self.assertIsNone(collect.canonical_url("javascript:alert(1)"))
+
     def test_clean(self):
         self.assertEqual(collect.clean("<b>Hello</b>   world"), "Hello world")
 

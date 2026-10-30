@@ -31,6 +31,17 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(collect.canonical_url("https://EXAMPLE.org/a?utm_source=x&v=1#part"), "https://example.org/a?v=1")
         self.assertIsNone(collect.canonical_url("javascript:alert(1)"))
 
+    def test_article_metadata_parser(self):
+        parser = collect.ArticleMetadata()
+        parser.feed('<html><head><meta property="article:published_time" content="2026-10-30T12:00:00Z"><meta property="og:title" content="Ukraine defence update"></head><body><h1>Fallback headline</h1></body></html>')
+        self.assertEqual(collect.date(parser.dates[0]).year, 2026)
+        self.assertEqual(parser.titles[0], "Ukraine defence update")
+
+    def test_article_metadata_no_date(self):
+        parser = collect.ArticleMetadata()
+        parser.feed("<html><h1>Undated article</h1></html>")
+        self.assertEqual(parser.dates, [])
+
     def test_clean(self):
         self.assertEqual(collect.clean("<b>Hello</b>   world"), "Hello world")
 

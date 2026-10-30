@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Collect candidate defence headlines without AI. Never publishes to the live site."""
 import datetime as dt
+import html
+from html.parser import HTMLParser
+from urllib.robotparser import RobotFileParser
 import email.utils
 import hashlib
 import json
@@ -77,6 +80,80 @@ def canonical_url(value):
     except ValueError:
         return None
 
+
+class ArticleLinks(HTMLParser):
+    """Extract dated article links and optional time elements from a public index."""
+    def __init__(self, base):
+        super().__init__()
+        self.base = base
+        self.items = []
+        self.link = None
+        self.in_time = False
+        self.time_value = None
+
+    def handle_starttag(self, tag, attrs):
+        from urllib.parse import urljoin
+        a = dict(attrs)
+        if tag == "a" and a.get("href"):
+            url = canonical_url(urljoin(self.base, a["href"]))
+            self.link = [url, []] if url else None
+        if tag == "time":
+            self.in_time = True
+            self.time_value = a.get("datetime")
+
+    def handle_data(self, data):
+        if self.link:
+            self.link[1].append(data)
+        if self.in_time and not self.time_value:
+            self.time_value = data.strip()
+
+    def handle_endtag(self, tag):
+        if tag == "a" and self.link:
+            url, parts = self.link
+            title = clean(" ".join(parts))
+            if url and len(title) >= 24 and len(title) <= 220:
+                self.items.append((title, url, None, ""))
+            self.link = None
+        if tag == "time":
+            self.in_time = False
+
+
+def html_fallback(source):
+    """Best-effort HTML discovery; undated links remain unpublishable candidates."""
+    from urllib.parse import urlsplit
+    url = source.get("html_url")
+    if not url:
+        return []
+    agent = "WatchFloorFeedCollector/0.2"
+    parsed = urlsplit(url)
+    robots_url = parsed.scheme + "://" + parsed.netloc + "/robots.txt"
+    robots = RobotFileParser()
+    robots.set_url(robots_url)
+    try:
+        robots.read()
+    except (OSError, ValueError):
+        raise ValueError("Cannot verify robots.txt; HTML fallback disabled")
+    if not robots.can_fetch(agent, url):
+        raise ValueError("robots.txt disallows HTML fallback")
+    req = urllib.request.Request(url, headers={"User-Agent": agent})
+    with urllib.request.urlopen(req, timeout=20) as response:
+        page = response.read(2_000_000).decode("utf-8", errors="replace")
+    parser = ArticleLinks(url)
+    parser.feed(page)
+    host = parsed.hostname
+    seen = set()
+    rows = []
+    for title, link, published, summary in parser.items:
+        target = urlsplit(link)
+        if target.hostname != host or link == url or link in seen:
+            continue
+        if not re.search(r"/(?:news|article|analysis|commentary|daily-news|\d{4}/\d{2})[/-]", target.path, re.I):
+            continue
+        seen.add(link)
+        rows.append((html.unescape(title), link, published, summary))
+    print("HTML DISCOVERY", source["name"], "links:", len(rows), "(undated; not auto-published)")
+    return rows[:MAX_PER_SOURCE]
+
 def main():
     sources = json.loads((ROOT / "sources.json").read_text(encoding="utf-8"))["sources"]
     old = json.loads(OUT.read_text(encoding="utf-8")) if OUT.exists() else []
@@ -98,6 +175,13 @@ def main():
                     break
                 except (OSError, ET.ParseError, ValueError) as exc:
                     failures.append(f"{feed_url}: {type(exc).__name__}: {exc}")
+            if entries is None and source.get("html_url"):
+                try:
+                    entries = html_fallback(source)
+                    if not entries:
+                        raise ValueError("No matching article links found")
+                except (OSError, ValueError) as exc:
+                    failures.append(f"HTML: {type(exc).__name__}: {exc}")
             if entries is None:
                 raise ValueError("; ".join(failures))
             count = 0

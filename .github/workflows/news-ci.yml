@@ -17,3 +17,25 @@ jobs:
           python-version: '3.12'
       - name: Offline unit tests
         run: python -m unittest discover -s automation -p 'test_*.py' -v
+  live-feed-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch public RSS feeds (no publishing)
+        run: python automation/collect.py
+      - name: Check candidate count
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("automation/candidates.json")
+          rows = json.loads(p.read_text()) if p.exists() else []
+          print("Fresh candidate articles:", len(rows))
+          if not rows:
+              raise SystemExit("No recent articles collected; inspect source URLs and logs")
+          for item in rows[:5]:
+              print(item["source"], item["published"], item["title"][:100])
+          PY

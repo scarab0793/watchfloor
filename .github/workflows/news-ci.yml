@@ -28,6 +28,19 @@ jobs:
         run: rm -f automation/candidates.json
       - name: Fetch public RSS feeds (no publishing)
         run: python automation/collect.py
+      - name: Select staging digest without AI
+        run: python automation/select.py
+      - name: Verify staging digest
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          rows = json.loads(Path("automation/selected.json").read_text())
+          assert 6 <= len(rows) <= 12
+          assert len({x["source"] for x in rows}) >= 3
+          assert all(x["status"] == "staging_unverified" for x in rows)
+          print("Staging digest:", len(rows), "articles from", len({x["source"] for x in rows}), "sources")
+          PY
       - name: Check candidate count
         run: |
           python - <<'PY'

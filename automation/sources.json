@@ -19,6 +19,95 @@
         "https://www.defenseone.com/rss/",
         "https://www.defenseone.com/rss/all/"
       ]
+    },
+    {
+      "name": "The War Zone",
+      "urls": [
+        "https://www.twz.com/feed",
+        "https://www.twz.com/feed/"
+      ]
+    },
+    {
+      "name": "Army Recognition",
+      "urls": [
+        "https://www.armyrecognition.com/feed",
+        "https://www.armyrecognition.com/rss"
+      ]
+    },
+    {
+      "name": "Naval Today",
+      "urls": [
+        "https://www.navaltoday.com/feed/"
+      ]
+    },
+    {
+      "name": "Defence Industry Europe",
+      "urls": [
+        "https://defence-industry.eu/feed/"
+      ]
+    },
+    {
+      "name": "European Security & Defence",
+      "urls": [
+        "https://euro-sd.com/feed/"
+      ]
+    },
+    {
+      "name": "Defense World",
+      "urls": [
+        "https://www.defenseworld.net/rss",
+        "https://www.defenseworld.net/feed"
+      ]
+    },
+    {
+      "name": "Airforce Technology",
+      "urls": [
+        "https://www.airforce-technology.com/feed/"
+      ]
+    },
+    {
+      "name": "War on the Rocks",
+      "urls": [
+        "https://warontherocks.com/feed/"
+      ]
+    },
+    {
+      "name": "RUSI",
+      "urls": [
+        "https://www.rusi.org/rss.xml",
+        "https://www.rusi.org/feed"
+      ]
+    },
+    {
+      "name": "Militarnyi",
+      "urls": [
+        "https://militarnyi.com/en/feed/"
+      ]
+    },
+    {
+      "name": "Military.com",
+      "urls": [
+        "https://www.military.com/rss-feeds/content?type=news",
+        "https://www.military.com/rss-feeds"
+      ]
+    },
+    {
+      "name": "GlobalSecurity.org",
+      "urls": [
+        "https://www.globalsecurity.org/rss/"
+      ]
+    },
+    {
+      "name": "Rocket Science",
+      "urls": [
+        "https://rocket-science.blog.hu/rss"
+      ]
+    },
+    {
+      "name": "Defense News",
+      "urls": [
+        "https://www.defensenews.com/arc/outboundfeeds/rss/"
+      ]
     }
   ]
 }

@@ -1,0 +1,16 @@
+{
+  "sources": [
+    {
+      "name": "The Defense Post",
+      "url": "https://thedefensepost.com/feed/"
+    },
+    {
+      "name": "Defense One",
+      "url": "https://www.defenseone.com/rss/"
+    },
+    {
+      "name": "Military.com",
+      "url": "https://www.military.com/rss-feeds/content?type=news"
+    }
+  ]
+}

@@ -7,6 +7,7 @@ from urllib.robotparser import RobotFileParser
 import email.utils
 import hashlib
 import json
+import html.parser
 import pathlib
 import re
 from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
@@ -127,9 +128,13 @@ class ArticleMetadata(HTMLParser):
         self.titles = []
         self.in_h1 = False
         self.h1_parts = []
+        self.jsonld = False
+        self.jsonld_parts = []
 
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
+        if tag == "script" and a.get("type", "").lower() == "application/ld+json":
+            self.jsonld = True
         if tag == "meta":
             key = (a.get("property") or a.get("name") or "").lower()
             if key in ("article:published_time", "datepublished", "pubdate", "date", "dc.date.issued"):
@@ -144,10 +149,33 @@ class ArticleMetadata(HTMLParser):
     def handle_data(self, data):
         if self.in_h1:
             self.h1_parts.append(data)
+        if self.jsonld:
+            self.jsonld_parts.append(data)
 
     def handle_endtag(self, tag):
         if tag == "h1":
             self.in_h1 = False
+        if tag == "script":
+            self.jsonld = False
+
+
+def jsonld_dates(chunks):
+    dates = []
+    for chunk in chunks:
+        try:
+            data = json.loads(chunk)
+        except (ValueError, TypeError):
+            continue
+        pending = [data]
+        while pending:
+            obj = pending.pop()
+            if isinstance(obj, list):
+                pending.extend(obj)
+            elif isinstance(obj, dict):
+                if obj.get("datePublished"):
+                    dates.append(obj["datePublished"])
+                pending.extend(v for v in obj.values() if isinstance(v, (dict, list)))
+    return dates
 
 
 def robots_allowed(url, agent):
@@ -169,7 +197,7 @@ def article_metadata(url, agent):
         body = response.read(600_000).decode("utf-8", errors="replace")
     parser = ArticleMetadata()
     parser.feed(body)
-    when = next((v for v in (date(x) for x in parser.dates) if v), None)
+    when = next((v for v in (date(x) for x in parser.dates + jsonld_dates(parser.jsonld_parts)) if v), None)
     headline = next((clean(x) for x in parser.titles if x), None)
     if not headline:
         headline = clean(" ".join(parser.h1_parts))
@@ -203,7 +231,7 @@ def html_fallback(source):
         rows.append((html.unescape(title), link, published, summary))
     print("HTML DISCOVERY", source["name"], "links:", len(rows))
     dated = []
-    for title, link, _, summary in rows[:8]:
+    for title, link, _, summary in rows[:12]:
         try:
             metadata = article_metadata(link, agent)
             if not metadata:

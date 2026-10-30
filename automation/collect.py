@@ -96,7 +96,8 @@ def main():
                 key = hashlib.sha256(url.encode()).hexdigest()[:20]
                 found[key] = {"id": key, "title": title, "url": url,
                               "source": source["name"], "published": when.isoformat(),
-                              "summary": clean(summary)[:500], "category": classify(title, clean(summary)),\n                              "summary_verified": False, "status": "candidate"}
+                              "summary": clean(summary)[:500], "category": classify(title, clean(summary)),
+                              "summary_verified": False, "status": "candidate"}
                 count += 1
                 if count >= MAX_PER_SOURCE:
                     break

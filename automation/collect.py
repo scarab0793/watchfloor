@@ -6,6 +6,7 @@ import hashlib
 import json
 import pathlib
 import re
+from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
 import urllib.request
 import xml.etree.ElementTree as ET
 
@@ -45,6 +46,37 @@ def parse(xml):
                    item.findtext("atom:published", namespaces=NS) or item.findtext("atom:updated", namespaces=NS),
                    item.findtext("atom:summary", namespaces=NS))
 
+TOPICS = {
+    "Ukraine": ("ukraine", "ukrainian", "kyiv", "kharkiv", "donetsk", "zelensky", "russia", "russian", "kremlin"),
+    "Iran": ("iran", "iranian", "tehran", "irgc", "strait of hormuz", "persian gulf"),
+    "Gaza": ("gaza", "hamas", "israel", "israeli", "idf", "rafah", "west bank"),
+}
+DEFENCE_TERMS = ("military", "defence", "defense", "army", "navy", "air force", "aircraft", "missile", "drone", "warship", "fighter jet", "artillery", "weapons", "security", "nato", "warfare", "submarine", "radar", "munition")
+
+def classify(title, summary):
+    # Classify by headline first, avoiding a long unrelated RSS description.
+    title = title.casefold()
+    summary = summary.casefold()
+    matches = [name for name, words in TOPICS.items() if any(w in title for w in words)]
+    if not matches:
+        matches = [name for name, words in TOPICS.items() if any(w in summary for w in words)]
+    if matches:
+        return matches[0] if len(matches) == 1 else "Multiple conflicts"
+    return "Defence & security" if any(w in title for w in DEFENCE_TERMS) else "Other"
+
+def canonical_url(value):
+    try:
+        parts = urlsplit(value.strip())
+        if parts.scheme not in ("https", "http") or not parts.hostname:
+            return None
+        if parts.username or parts.password or parts.hostname in ("localhost",):
+            return None
+        query = urlencode([(k, v) for k, v in parse_qsl(parts.query, keep_blank_values=True)
+                           if not k.casefold().startswith(("utm_", "fbclid", "gclid"))])
+        return urlunsplit((parts.scheme.lower(), parts.netloc.lower(), parts.path or "/", query, ""))
+    except ValueError:
+        return None
+
 def main():
     sources = json.loads((ROOT / "sources.json").read_text(encoding="utf-8"))["sources"]
     old = json.loads(OUT.read_text(encoding="utf-8")) if OUT.exists() else []
@@ -58,13 +90,13 @@ def main():
             count = 0
             for title, url, published, summary in parse(content):
                 when = date(published)
-                title, url = clean(title), (url or "").strip()
-                if not (title and url.startswith(("https://", "http://")) and when and CUTOFF <= when <= NOW + dt.timedelta(hours=1)):
+                title, url = clean(title), canonical_url(url or "")
+                if not (title and url and when and CUTOFF <= when <= NOW + dt.timedelta(hours=1)):
                     continue
-                key = hashlib.sha256(url.split("#")[0].encode()).hexdigest()[:20]
+                key = hashlib.sha256(url.encode()).hexdigest()[:20]
                 found[key] = {"id": key, "title": title, "url": url,
                               "source": source["name"], "published": when.isoformat(),
-                              "summary": clean(summary)[:500], "status": "candidate"}
+                              "summary": clean(summary)[:500], "category": classify(title, clean(summary)),\n                              "summary_verified": False, "status": "candidate"}
                 count += 1
                 if count >= MAX_PER_SOURCE:
                     break

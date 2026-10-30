@@ -118,6 +118,63 @@ class ArticleLinks(HTMLParser):
             self.in_time = False
 
 
+
+class ArticleMetadata(HTMLParser):
+    """Read machine-readable publication dates and headline from article HTML."""
+    def __init__(self):
+        super().__init__()
+        self.dates = []
+        self.titles = []
+        self.in_h1 = False
+        self.h1_parts = []
+
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        if tag == "meta":
+            key = (a.get("property") or a.get("name") or "").lower()
+            if key in ("article:published_time", "datepublished", "pubdate", "date", "dc.date.issued"):
+                self.dates.append(a.get("content"))
+            if key in ("og:title", "twitter:title"):
+                self.titles.append(a.get("content"))
+        if tag == "time" and a.get("datetime"):
+            self.dates.append(a["datetime"])
+        if tag == "h1":
+            self.in_h1 = True
+
+    def handle_data(self, data):
+        if self.in_h1:
+            self.h1_parts.append(data)
+
+    def handle_endtag(self, tag):
+        if tag == "h1":
+            self.in_h1 = False
+
+
+def robots_allowed(url, agent):
+    p = urlsplit(url)
+    robots = RobotFileParser()
+    robots.set_url(p.scheme + "://" + p.netloc + "/robots.txt")
+    try:
+        robots.read()
+    except (OSError, ValueError):
+        return False
+    return robots.can_fetch(agent, url)
+
+
+def article_metadata(url, agent):
+    if not robots_allowed(url, agent):
+        return None
+    req = urllib.request.Request(url, headers={"User-Agent": agent})
+    with urllib.request.urlopen(req, timeout=12) as response:
+        body = response.read(600_000).decode("utf-8", errors="replace")
+    parser = ArticleMetadata()
+    parser.feed(body)
+    when = next((v for v in (date(x) for x in parser.dates) if v), None)
+    headline = next((clean(x) for x in parser.titles if x), None)
+    if not headline:
+        headline = clean(" ".join(parser.h1_parts))
+    return (headline, when)
+
 def html_fallback(source):
     """Best-effort HTML discovery; undated links remain unpublishable candidates."""
     from urllib.parse import urlsplit
@@ -126,15 +183,8 @@ def html_fallback(source):
         return []
     agent = "WatchFloorFeedCollector/0.2"
     parsed = urlsplit(url)
-    robots_url = parsed.scheme + "://" + parsed.netloc + "/robots.txt"
-    robots = RobotFileParser()
-    robots.set_url(robots_url)
-    try:
-        robots.read()
-    except (OSError, ValueError):
-        raise ValueError("Cannot verify robots.txt; HTML fallback disabled")
-    if not robots.can_fetch(agent, url):
-        raise ValueError("robots.txt disallows HTML fallback")
+    if not robots_allowed(url, agent):
+        raise ValueError("robots.txt unavailable or disallows HTML fallback")
     req = urllib.request.Request(url, headers={"User-Agent": agent})
     with urllib.request.urlopen(req, timeout=20) as response:
         page = response.read(2_000_000).decode("utf-8", errors="replace")
@@ -151,8 +201,20 @@ def html_fallback(source):
             continue
         seen.add(link)
         rows.append((html.unescape(title), link, published, summary))
-    print("HTML DISCOVERY", source["name"], "links:", len(rows), "(undated; not auto-published)")
-    return rows[:MAX_PER_SOURCE]
+    print("HTML DISCOVERY", source["name"], "links:", len(rows))
+    dated = []
+    for title, link, _, summary in rows[:8]:
+        try:
+            metadata = article_metadata(link, agent)
+            if not metadata:
+                continue
+            headline, when = metadata
+            if when and CUTOFF <= when <= NOW + dt.timedelta(hours=1):
+                dated.append((headline or title, link, when.isoformat(), summary))
+        except (OSError, ValueError) as exc:
+            print("HTML ARTICLE WARNING", source["name"], type(exc).__name__)
+    print("HTML DATED", source["name"], "articles:", len(dated))
+    return dated
 
 def main():
     sources = json.loads((ROOT / "sources.json").read_text(encoding="utf-8"))["sources"]

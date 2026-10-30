@@ -1,16 +1,24 @@
 {
   "sources": [
     {
+      "name": "Defence Blog",
+      "urls": [
+        "https://defence-blog.com/feed/",
+        "https://defence-blog.com/category/news/feed/"
+      ]
+    },
+    {
       "name": "The Defense Post",
-      "url": "https://thedefensepost.com/feed/"
+      "urls": [
+        "https://thedefensepost.com/feed/"
+      ]
     },
     {
       "name": "Defense One",
-      "url": "https://www.defenseone.com/rss/"
-    },
-    {
-      "name": "Military.com",
-      "url": "https://www.military.com/rss-feeds/content?type=news"
+      "urls": [
+        "https://www.defenseone.com/rss/",
+        "https://www.defenseone.com/rss/all/"
+      ]
     }
   ]
 }

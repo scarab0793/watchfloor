@@ -37,6 +37,13 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual(collect.date(parser.dates[0]).year, 2026)
         self.assertEqual(parser.titles[0], "Ukraine defence update")
 
+    def test_jsonld_date(self):
+        chunks = ['{"@graph":[{"@type":"NewsArticle","datePublished":"2026-10-30T11:30:00Z"}]}']
+        self.assertEqual(collect.jsonld_dates(chunks), ["2026-10-30T11:30:00Z"])
+
+    def test_jsonld_malformed(self):
+        self.assertEqual(collect.jsonld_dates(["not json"]), [])
+
     def test_article_metadata_no_date(self):
         parser = collect.ArticleMetadata()
         parser.feed("<html><h1>Undated article</h1></html>")

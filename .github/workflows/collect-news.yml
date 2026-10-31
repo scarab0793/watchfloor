@@ -1,0 +1,36 @@
+name: Collect news candidates (staging only)
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 6,18 * * *'
+permissions:
+  contents: write
+concurrency:
+  group: watchfloor-news-candidates
+  cancel-in-progress: false
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/automated-news-ingestion
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run offline parser tests
+        run: python -m unittest discover -s automation -p 'test_*.py' -v
+      - name: Collect feeds
+        run: python automation/collect.py
+      - name: Select staged news without AI
+        run: python automation/select.py
+      - name: Commit staging candidates and selection
+        run: |
+          git config user.name "watchfloor-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add automation/candidates.json automation/selected.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Update staged news candidates and digest"
+            git push origin HEAD:feature/automated-news-ingestion
+          fi

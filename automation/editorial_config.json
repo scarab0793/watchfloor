@@ -19,5 +19,8 @@
   "protected_sections": [
     "Analysis"
   ],
-  "analysis_automation_enabled": false
+  "analysis_automation_enabled": false,
+  "publication_requires_approval": true,
+  "live_publication_enabled": false,
+  "publish_scope": "News only"
 }

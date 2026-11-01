@@ -60,17 +60,8 @@ def build(articles, translations, languages):
         seen.add(item_id)
     return sorted(result, key=lambda item: item["published_at"], reverse=True)
 
-def main():
-    if not EDITORIAL.exists():
-        print("No editorial archive; preserving existing News feed")
-        return
-    articles = json.loads(EDITORIAL.read_text()).get("items", [])
-    translations = json.loads(TRANSLATIONS.read_text()) if TRANSLATIONS.exists() else {}
-    languages = json.loads((BASE / "i18n" / "ui.json").read_text()).keys()
-    items = build(articles, translations, languages)
-    if not items:
-        print("No approved News articles; preserving existing News feed")
-        return
+def preserve_history(items, previous):
+    """Merge approved new News with existing News; reject malformed history."""
     # Keep previously published approved News when the editorial archive is rotated.
     if OUTPUT.exists():
         previous = json.loads(OUTPUT.read_text(encoding="utf-8"))
@@ -89,6 +80,22 @@ def main():
                 items.append(prior)
                 existing_ids.add(prior_id)
     items.sort(key=lambda item: item["published_at"], reverse=True)
+    return items
+
+def main():
+    if not EDITORIAL.exists():
+        print("No editorial archive; preserving existing News feed")
+        return
+    articles = json.loads(EDITORIAL.read_text()).get("items", [])
+    translations = json.loads(TRANSLATIONS.read_text()) if TRANSLATIONS.exists() else {}
+    languages = json.loads((BASE / "i18n" / "ui.json").read_text()).keys()
+    items = build(articles, translations, languages)
+    if not items:
+        print("No approved News articles; preserving existing News feed")
+        return
+    if OUTPUT.exists():
+        previous = json.loads(OUTPUT.read_text(encoding="utf-8"))
+        items = preserve_history(items, previous)
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text(json.dumps({"schema_version": 1, "section": "News", "items": items},
                                   ensure_ascii=False, indent=2) + "\n")

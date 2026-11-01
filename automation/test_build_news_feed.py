@@ -35,6 +35,13 @@ class NewsFeedTests(unittest.TestCase):
         self.assertEqual(result[0]["section"], "News")
         self.assertIn("hu", result[0]["translations"])
 
+    def test_missing_translation_excludes_news(self):
+        self.assertEqual(build_news_feed.build([story()], {}, ["en", "hu"]), [])
+
+    def test_incomplete_translation_excludes_news(self):
+        translations = {"hu": {"news-1": {"t": "Cim", "s": "Osszefoglalo", "p": ["rovid"] * 6}}}
+        self.assertEqual(build_news_feed.build([story()], translations, ["en", "hu"]), [])
+
     def test_bad_source_url_is_excluded(self):
         original = story()
         original["sources"][0]["url"] = "javascript:alert(1)"

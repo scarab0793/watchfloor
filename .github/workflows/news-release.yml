@@ -27,10 +27,12 @@ jobs:
           if not path.exists():
               raise SystemExit("No approved News feed on main; release blocked")
           feed = json.loads(path.read_text(encoding="utf-8"))
-          if feed.get("section") != "News" or not feed.get("items"):
+          if feed.get("section") != "News" or not isinstance(feed.get("items"), list) or not feed["items"]:
               raise SystemExit("No publishable News items; release blocked")
-          if any(item.get("section") != "News" for item in feed["items"]):
+          if any(not isinstance(item, dict) or item.get("section") != "News" for item in feed["items"]):
               raise SystemExit("Non-News item found; release blocked")
+          if any(not isinstance(item.get("translations"), dict) for item in feed["items"]):
+              raise SystemExit("Missing News translations; release blocked")
           PY
       - name: Build live page without changing existing article data
         run: |

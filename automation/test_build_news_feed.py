@@ -2,7 +2,7 @@
 import unittest
 import build_news_feed
 
-def story(section="News", status="staging_review_required", identifier="news-1"):
+def story(section="News", status="approved", identifier="news-1"):
     return {
         "id": identifier, "section": section, "status": status,
         "title": "Verified military equipment update",
@@ -19,6 +19,7 @@ class NewsFeedTests(unittest.TestCase):
         self.assertEqual(result, [])
 
     def test_unreviewed_items_are_excluded(self):
+        self.assertEqual(build_news_feed.build([story(status="staging_review_required")], {}, ["en"]), [])
         self.assertEqual(build_news_feed.build([story(status="candidate")], {}, ["en"]), [])
 
     def test_duplicate_ids_are_excluded(self):

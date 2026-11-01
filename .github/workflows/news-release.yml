@@ -31,6 +31,11 @@ jobs:
               raise SystemExit("No publishable News items; release blocked")
           if any(not isinstance(item, dict) or item.get("section") != "News" for item in feed["items"]):
               raise SystemExit("Non-News item found; release blocked")
+          ids = [item.get("id") for item in feed["items"]]
+          if any(not isinstance(identifier, str) or not identifier for identifier in ids) or len(ids) != len(set(ids)):
+              raise SystemExit("Missing or duplicate News IDs; release blocked")
+          if any(not isinstance(item.get("published_at"), str) or not item["published_at"] for item in feed["items"]):
+              raise SystemExit("Missing News publication timestamps; release blocked")
           languages = set(json.loads(Path("i18n/ui.json").read_text(encoding="utf-8"))) - {"en"}
           for item in feed["items"]:
               translations = item.get("translations")

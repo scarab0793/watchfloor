@@ -62,6 +62,23 @@ jobs:
             data/automated-news.json
           if-no-files-found: warn
           retention-days: 7
+      - name: Validate generated News feed and site preview
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          preview = Path("watchfloor-news-preview.html").read_text(encoding="utf-8")
+          assert "loadAutomatedNews" in preview
+          assert "data/automated-news.json" in preview
+          feed = Path("data/automated-news.json")
+          if feed.exists():
+              data = json.loads(feed.read_text(encoding="utf-8"))
+              assert data.get("section") == "News"
+              assert all(item.get("section") == "News" for item in data.get("items", []))
+              print("Preview and News-only feed validated:", len(data.get("items", [])), "items")
+          else:
+              print("Preview validated; no approved News feed yet")
+          PY
       - name: Audit changed files before staging commit
         run: |
           git status --short

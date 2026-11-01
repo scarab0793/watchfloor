@@ -22,6 +22,17 @@ jobs:
           python-version: '3.12'
       - name: Parser tests
         run: python -m unittest discover -s automation -p 'test_*.py' -v
+      - name: Confirm News-only branch and publishing safeguards
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          config = json.loads(Path("automation/editorial_config.json").read_text())
+          assert config.get("live_publication_enabled") is False, "Live publication must remain disabled during staging"
+          assert config.get("analysis_automation_enabled") is False, "Analysis automation must remain disabled"
+          assert config.get("allowed_sections") == ["News"], "Only News is permitted"
+          print("Staging safeguards verified: News only, no live deployment")
+          PY
       - name: Check API configuration
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

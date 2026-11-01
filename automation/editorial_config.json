@@ -12,5 +12,12 @@
   "maximum_words": 850,
   "publication_mode": "staging_until_tests_pass",
   "require_sources": true,
-  "require_image_credit": true
+  "require_image_credit": true,
+  "allowed_sections": [
+    "News"
+  ],
+  "protected_sections": [
+    "Analysis"
+  ],
+  "analysis_automation_enabled": false
 }

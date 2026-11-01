@@ -1,0 +1,59 @@
+name: WatchFloor News release (manual guarded)
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: watchfloor-news-release
+  cancel-in-progress: false
+jobs:
+  release:
+    if: github.ref == 'refs/heads/main' && vars.WATCHFLOOR_NEWS_RELEASE_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify approved News feed exists
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path("data/automated-news.json")
+          if not path.exists():
+              raise SystemExit("No approved News feed on main; release blocked")
+          feed = json.loads(path.read_text(encoding="utf-8"))
+          if feed.get("section") != "News" or not feed.get("items"):
+              raise SystemExit("No publishable News items; release blocked")
+          if any(item.get("section") != "News" for item in feed["items"]):
+              raise SystemExit("Non-News item found; release blocked")
+          PY
+      - name: Build live page without changing existing article data
+        run: |
+          cp index.html /tmp/watchfloor-before.html
+          python build.py /tmp/watchfloor-before.html index.html
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          before = Path("/tmp/watchfloor-before.html").read_text(encoding="utf-8")
+          after = Path("index.html").read_text(encoding="utf-8")
+          pattern = r'const items=\\[[\\s\\S]*?\\n\\];'
+          original = re.search(pattern, before)
+          rebuilt = re.search(pattern, after)
+          if not original or not rebuilt or original.group() != rebuilt.group():
+              raise SystemExit("Existing article data changed; release blocked")
+          if "loadAutomatedNews" not in after:
+              raise SystemExit("News loader missing; release blocked")
+          print("Existing articles preserved, News loader present")
+          PY
+      - name: Commit only the rebuilt page
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Enable approved News feed loader on WatchFloor"
+            git push origin HEAD:main
+          fi

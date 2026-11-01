@@ -31,12 +31,18 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           WATCHFLOOR_AI_MAX_ARTICLES: '3'
         run: python automation/editorial.py
+      - name: Translate staged News articles only
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          WATCHFLOOR_MAX_TRANSLATIONS: '12'
+        run: python automation/translate_news.py
       - name: Commit staging data only
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add automation/candidates.json automation/selected.json
           if test -f automation/editorial.json; then git add automation/editorial.json; fi
+          if test -f automation/news_translations.json; then git add automation/news_translations.json; fi
           if ! git diff --cached --quiet; then
             git commit -m "Update WatchFloor staged editorial drafts"
             git push origin HEAD:feature/automated-news-ingestion

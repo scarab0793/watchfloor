@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build a validated News-only feed, never rewriting existing Analysis."""
+"""Build an approved News-only feed, never publishing unreviewed drafts or Analysis."""
 import json
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -19,7 +19,7 @@ def build(articles, translations, languages):
     result = []
     seen = set()
     for article in articles:
-        if article.get("section") != "News" or article.get("status") != "staging_review_required":
+        if article.get("section") != "News" or article.get("status") != "approved":
             continue
         item_id = article.get("id")
         paragraphs = article.get("paragraphs", [])

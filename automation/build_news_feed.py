@@ -71,6 +71,19 @@ def main():
     if not items:
         print("No approved News articles; preserving existing News feed")
         return
+    # Keep previously published approved News when the editorial archive is rotated.
+    if OUTPUT.exists():
+        previous = json.loads(OUTPUT.read_text(encoding="utf-8"))
+        if previous.get("section") != "News" or not isinstance(previous.get("items"), list):
+            raise SystemExit("Invalid existing News feed; refusing overwrite")
+        existing_ids = {item["id"] for item in items}
+        for prior in previous["items"]:
+            if not isinstance(prior, dict) or prior.get("section") != "News":
+                raise SystemExit("Unexpected non-News entry in existing feed; refusing overwrite")
+            if prior.get("id") not in existing_ids:
+                items.append(prior)
+                existing_ids.add(prior.get("id"))
+    items.sort(key=lambda item: item["published_at"], reverse=True)
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text(json.dumps({"schema_version": 1, "section": "News", "items": items},
                                   ensure_ascii=False, indent=2) + "\n")

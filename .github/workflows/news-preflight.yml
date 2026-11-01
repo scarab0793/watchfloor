@@ -51,6 +51,7 @@ jobs:
           print(f"Candidates: {len(candidates)}; selected: {len(selected)}; preview OK")
           PY
       - name: Upload diagnostic artifacts (no publication)
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: watchfloor-news-preflight
@@ -58,4 +59,5 @@ jobs:
             automation/candidates.json
             automation/selected.json
             watchfloor-news-preview.html
+          if-no-files-found: warn
           retention-days: 7

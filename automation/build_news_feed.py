@@ -61,25 +61,23 @@ def build(articles, translations, languages):
     return sorted(result, key=lambda item: item["published_at"], reverse=True)
 
 def preserve_history(items, previous):
-    """Merge approved new News with existing News; reject malformed history."""
-    # Keep previously published approved News when the editorial archive is rotated.
-    if True:
-        if previous.get("section") != "News" or not isinstance(previous.get("items"), list):
-            raise SystemExit("Invalid existing News feed; refusing overwrite")
-        existing_ids = {item["id"] for item in items}
-        for prior in previous["items"]:
-            if not isinstance(prior, dict) or prior.get("section") != "News":
-                raise SystemExit("Unexpected non-News entry in existing feed; refusing overwrite")
-            prior_id = prior.get("id")
-            if not isinstance(prior_id, str) or not prior_id:
-                raise SystemExit("Existing News entry missing valid ID; refusing overwrite")
-            if not isinstance(prior.get("published_at"), str) or not prior["published_at"]:
-                raise SystemExit("Existing News entry missing timestamp; refusing overwrite")
-            if prior_id not in existing_ids:
-                items.append(prior)
-                existing_ids.add(prior_id)
-    items.sort(key=lambda item: item["published_at"], reverse=True)
-    return items
+    """Merge new News with published News, refusing malformed history."""
+    if previous.get("section") != "News" or not isinstance(previous.get("items"), list):
+        raise SystemExit("Invalid existing News feed; refusing overwrite")
+    merged = list(items)
+    existing_ids = {item["id"] for item in merged}
+    for prior in previous["items"]:
+        if not isinstance(prior, dict) or prior.get("section") != "News":
+            raise SystemExit("Unexpected non-News entry in existing feed; refusing overwrite")
+        prior_id = prior.get("id")
+        if not isinstance(prior_id, str) or not prior_id:
+            raise SystemExit("Existing News entry missing valid ID; refusing overwrite")
+        if not isinstance(prior.get("published_at"), str) or not prior["published_at"]:
+            raise SystemExit("Existing News entry missing timestamp; refusing overwrite")
+        if prior_id not in existing_ids:
+            merged.append(prior)
+            existing_ids.add(prior_id)
+    return sorted(merged, key=lambda item: item["published_at"], reverse=True)
 
 def main():
     if not EDITORIAL.exists():

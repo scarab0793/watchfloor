@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from urllib.parse import urlsplit
 import re
 import urllib.request
 from urllib.parse import urlsplit
@@ -93,7 +94,7 @@ def main():
         if any(x["url"] in done for x in group): continue
         # Publication requires independent corroboration from two source domains.
         # Skip single-source drafts before spending API credits.
-        domains={__import__("urllib.parse",fromlist=["urlsplit"]).urlsplit(x["url"]).hostname for x in group}
+        domains={urlsplit(x["url"]).hostname.lower().removeprefix("www.") for x in group if urlsplit(x["url"]).hostname}
         if len(group)<2 or len(domains)<2:
             print("Skipped single-source story (no AI charge)")
             continue

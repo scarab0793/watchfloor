@@ -21,15 +21,32 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Check API key presence without revealing it
+      - name: Check rollout readiness without revealing secrets
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          EDITORIAL_ENABLED: ${{ vars.WATCHFLOOR_EDITORIAL_ENABLED }}
+          RELEASE_ENABLED: ${{ vars.WATCHFLOOR_NEWS_RELEASE_ENABLED }}
         run: |
-          if test -n "$OPENAI_API_KEY"; then
-            echo "OPENAI_API_KEY is configured"
-          else
-            echo "::warning::OPENAI_API_KEY missing; AI publishing remains blocked, but source diagnostics will continue"
-          fi
+          {
+            echo "## WatchFloor rollout readiness"
+            if test -n "$OPENAI_API_KEY"; then
+              echo "- OpenAI API secret: configured"
+            else
+              echo "- OpenAI API secret: missing"
+              echo "::warning::OPENAI_API_KEY missing; AI publishing remains blocked, but source diagnostics will continue"
+            fi
+            if test "$EDITORIAL_ENABLED" = "true"; then
+              echo "- Editorial schedule: enabled"
+            else
+              echo "- Editorial schedule: disabled (WATCHFLOOR_EDITORIAL_ENABLED must be true)"
+            fi
+            if test "$RELEASE_ENABLED" = "true"; then
+              echo "- Manual release gate: enabled"
+            else
+              echo "- Manual release gate: disabled (WATCHFLOOR_NEWS_RELEASE_ENABLED must be true)"
+            fi
+            echo "- Live automatic deployment: not configured"
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Run offline tests
         run: python -m unittest discover -s automation -p 'test_*.py' -v
       - name: Collect live public sources without AI

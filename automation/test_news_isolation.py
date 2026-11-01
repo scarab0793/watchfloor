@@ -24,6 +24,13 @@ class NewsSafetyTests(unittest.TestCase):
         self.assertIn('news_translations.json', code)
         self.assertNotIn('i18n" / language', code)
 
+    def test_template_only_adds_news(self):
+        template = (BASE.parent / "template.html").read_text()
+        self.assertIn('feed.section!=="News"', template)
+        self.assertIn('a.section!=="News"', template)
+        self.assertIn('existing.has(a.id)', template)
+        self.assertIn("loadAutomatedNews();", template)
+
     def test_live_files_not_modified_by_workflow(self):
         workflow = (BASE.parent / ".github" / "workflows" / "editorial-staging.yml").read_text()
         self.assertIn("automation/news_translations.json", workflow)

@@ -40,6 +40,18 @@ jobs:
           assert config.get("allowed_sections") == ["News"], "Only News is permitted"
           print("Staging safeguards verified: News only, no live deployment")
           PY
+      - name: Verify scheduled run and API budget safeguards
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          config = json.loads(Path("automation/editorial_config.json").read_text())
+          assert config["max_articles_per_run"] <= 3
+          assert config["allowed_sections"] == ["News"]
+          assert config["live_publication_enabled"] is False
+          assert config["analysis_automation_enabled"] is False
+          print("Editorial scope and per-run article cap verified")
+          PY
       - name: Check API configuration
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

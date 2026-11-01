@@ -22,6 +22,12 @@ jobs:
         run: python -m compileall -q automation
       - name: Run offline tests
         run: python -m unittest discover -s automation -p 'test_*.py' -v
+      - name: Build multilingual preview and verify News loader
+        run: |
+          python build.py index.html /tmp/watchfloor-news-preview.html
+          test -s /tmp/watchfloor-news-preview.html
+          grep -q "async function loadAutomatedNews" /tmp/watchfloor-news-preview.html
+          grep -q "data/automated-news.json" /tmp/watchfloor-news-preview.html
       - name: Confirm Analysis files are unchanged in this branch
         if: github.event_name == 'pull_request'
         run: |

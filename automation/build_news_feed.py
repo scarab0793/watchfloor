@@ -63,8 +63,7 @@ def build(articles, translations, languages):
 def preserve_history(items, previous):
     """Merge approved new News with existing News; reject malformed history."""
     # Keep previously published approved News when the editorial archive is rotated.
-    if OUTPUT.exists():
-        previous = json.loads(OUTPUT.read_text(encoding="utf-8"))
+    if True:
         if previous.get("section") != "News" or not isinstance(previous.get("items"), list):
             raise SystemExit("Invalid existing News feed; refusing overwrite")
         existing_ids = {item["id"] for item in items}

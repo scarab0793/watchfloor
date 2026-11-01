@@ -44,6 +44,8 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           WATCHFLOOR_MAX_TRANSLATIONS: '12'
         run: python automation/translate_news.py
+      - name: Approve qualifying News only
+        run: python automation/approve_news.py
       - name: Build validated News-only JSON feed
         run: python automation/build_news_feed.py
       - name: Commit staging data only

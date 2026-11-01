@@ -1,0 +1,52 @@
+name: WatchFloor News preflight (no AI cost)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check API key presence without revealing it
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if test -n "$OPENAI_API_KEY"; then
+            echo "OPENAI_API_KEY is configured"
+          else
+            echo "::warning::OPENAI_API_KEY missing; editorial AI pipeline cannot run"
+          fi
+      - name: Run offline tests
+        run: python -m unittest discover -s automation -p 'test_*.py' -v
+      - name: Collect live public sources without AI
+        run: |
+          python automation/collect.py
+          python automation/select.py
+      - name: Validate selection and multilingual preview
+        run: |
+          python build.py index.html watchfloor-news-preview.html
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          candidates=json.loads(Path("automation/candidates.json").read_text())
+          selected=json.loads(Path("automation/selected.json").read_text())
+          preview=Path("watchfloor-news-preview.html").read_text()
+          assert isinstance(candidates,list) and isinstance(selected,list)
+          assert all(x.get("status")=="staging_unverified" for x in selected)
+          assert "loadAutomatedNews" in preview
+          print(f"Candidates: {len(candidates)}; selected: {len(selected)}; preview OK")
+          PY
+      - name: Upload diagnostic artifacts (no publication)
+        uses: actions/upload-artifact@v4
+        with:
+          name: watchfloor-news-preflight
+          path: |
+            automation/candidates.json
+            automation/selected.json
+            watchfloor-news-preview.html
+          retention-days: 7

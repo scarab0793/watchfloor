@@ -35,15 +35,20 @@ def build(articles, translations, languages):
         if not all(isinstance(article.get(k), str) and article[k].strip() for k in ("title", "summary", "published_at")):
             continue
         localized = {}
+        complete = True
         for lang in languages:
             if lang == "en":
                 continue
             t = translations.get(lang, {}).get(item_id)
-            if not isinstance(t, dict) or not isinstance(t.get("t"), str) or not isinstance(t.get("s"), str):
-                continue
-            if not isinstance(t.get("p"), list) or len(t["p"]) != len(paragraphs):
-                continue
+            if not isinstance(t, dict) or not all(isinstance(t.get(k), str) and t[k].strip() for k in ("t", "s")):
+                complete = False
+                break
+            if not isinstance(t.get("p"), list) or len(t["p"]) != len(paragraphs) or not all(isinstance(p, str) and len(p) >= 20 for p in t["p"]):
+                complete = False
+                break
             localized[lang] = t
+        if not complete:
+            continue
         result.append({
             "id": item_id, "section": "News", "title": article["title"],
             "summary": article["summary"], "paragraphs": paragraphs,

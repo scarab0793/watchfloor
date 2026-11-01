@@ -91,6 +91,12 @@ def main():
     for group in group_items(rows):
         if count>=CFG["max_articles_per_run"]: break
         if any(x["url"] in done for x in group): continue
+        # Publication requires independent corroboration from two source domains.
+        # Skip single-source drafts before spending API credits.
+        domains={__import__("urllib.parse",fromlist=["urlsplit"]).urlsplit(x["url"]).hostname for x in group}
+        if len(group)<2 or len(domains)<2:
+            print("Skipped single-source story (no AI charge)")
+            continue
         sources=[{"publisher":x["source"],"url":x["url"],"headline":x["title"],"reference":evidence(x["url"])} for x in group]
         if max((len(s["reference"]) for s in sources),default=0)<CFG["min_source_article_characters"]:
             print("Skipped: insufficient full-source evidence"); continue

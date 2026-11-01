@@ -11,7 +11,7 @@ concurrency:
 jobs:
   editorial:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
         with:
@@ -22,6 +22,14 @@ jobs:
           python-version: '3.12'
       - name: Parser tests
         run: python -m unittest discover -s automation -p 'test_*.py' -v
+      - name: Check API configuration
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if test -z "$OPENAI_API_KEY"; then
+            echo "OPENAI_API_KEY is not configured; refusing a false-success editorial run"
+            exit 1
+          fi
       - name: Collect candidate stories
         run: python automation/collect.py
       - name: Select fresh stories

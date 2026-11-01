@@ -1,0 +1,38 @@
+name: WatchFloor News safety checks
+on:
+  pull_request:
+    paths:
+      - 'automation/**'
+      - 'template.html'
+      - 'i18n/**'
+      - '.github/workflows/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  news-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile News automation
+        run: python -m compileall -q automation
+      - name: Run offline tests
+        run: python -m unittest discover -s automation -p 'test_*.py' -v
+      - name: Build multilingual preview and verify News loader
+        run: |
+          python build.py index.html /tmp/watchfloor-news-preview.html
+          test -s /tmp/watchfloor-news-preview.html
+          grep -q "async function loadAutomatedNews" /tmp/watchfloor-news-preview.html
+          grep -q "data/automated-news.json" /tmp/watchfloor-news-preview.html
+      - name: Confirm Analysis files are unchanged in this branch
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch origin "${{ github.event.pull_request.base.ref }}" --depth=1
+          if git diff --name-only FETCH_HEAD HEAD -- i18n | grep -q .; then
+            echo "Existing i18n files were modified; manual review required."
+            exit 1
+          fi

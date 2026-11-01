@@ -165,7 +165,43 @@ function chrome(){
  document.title=U().title;
 }
 function route(){const m=location.hash.match(/^#\/(.+)$/);m?article(m[1]):home()}
+// Automated News feed is additive. Existing editorial/Analysis records are immutable.
+async function loadAutomatedNews(){
+ try{
+  const response=await fetch("data/automated-news.json",{cache:"no-store"});
+  if(!response.ok)return;
+  const feed=await response.json();
+  if(feed.section!=="News"||!Array.isArray(feed.items))return;
+  const existing=new Set(items.map(i=>i.id));
+  let added=0;
+  for(const a of feed.items){
+   if(a.section!=="News"||typeof a.id!=="string"||existing.has(a.id))continue;
+   if(!Array.isArray(a.paragraphs)||a.paragraphs.length<5||!Array.isArray(a.sources)||!a.sources.length)continue;
+   if(!a.sources.every(s=>typeof s.publisher==="string"&&/^https:\/\//.test(s.url||"")))continue;
+   const category=String(a.category||"Defence & security");
+   const war=category==="Ukraine"?"Ukraine":category==="Gaza"?"Gaza":category==="Iran"?"Iran and Gulf":"";
+   const when=new Date(a.published_at);
+   if(Number.isNaN(when.getTime()))continue;
+   const original={t:esc(a.title||""),s:esc(a.summary||""),p:a.paragraphs.map(esc)};
+   const entry={id:a.id,t:original.t,s:original.s,p:original.p,
+    r:war?"Wars":"Europe",w:war,c:"Military AI",st:"Reported",
+    time:when.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric",timeZone:"UTC"}),
+    src:a.sources.map(s=>[esc(s.publisher),s.url]),img:"",cr:"",_o:original};
+   if(a.translations&&typeof a.translations==="object"){
+    for(const [code,tr] of Object.entries(a.translations)){
+     if(code==="en"||!UI[code]||!tr||!Array.isArray(tr.p)||tr.p.length!==original.p.length)continue;
+     if(!TR[code])TR[code]={};
+     // Existing translations always take priority.
+     if(!TR[code][a.id])TR[code][a.id]={t:esc(tr.t),s:esc(tr.s),p:tr.p.map(esc)};
+    }
+   }
+   items.push(entry);existing.add(a.id);added++;
+  }
+  if(added){applyLang();route()}
+ }catch(error){console.warn("News feed unavailable; original content preserved")}
+}
 window.addEventListener("hashchange",route);applyLang();chrome();route();
+loadAutomatedNews();
 </script>
 </body>
 </html>

@@ -1,0 +1,128 @@
+name: WatchFloor editorial staging (3x daily)
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: watchfloor-editorial-staging
+  cancel-in-progress: false
+jobs:
+  editorial:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/automated-news-ingestion
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Parser tests
+        run: python -m unittest discover -s automation -p 'test_*.py' -v
+      - name: Confirm workflow runs on intended branch
+        run: |
+          if test "${GITHUB_REF_NAME}" != "feature/automated-news-ingestion"; then
+            echo "Refusing staging on unexpected branch: ${GITHUB_REF_NAME}"
+            exit 1
+          fi
+      - name: Confirm News-only branch and publishing safeguards
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          config = json.loads(Path("automation/editorial_config.json").read_text())
+          assert config.get("live_publication_enabled") is False, "Live publication must remain disabled during staging"
+          assert config.get("analysis_automation_enabled") is False, "Analysis automation must remain disabled"
+          assert config.get("allowed_sections") == ["News"], "Only News is permitted"
+          print("Staging safeguards verified: News only, no live deployment")
+          PY
+      - name: Check API configuration
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if test -z "$OPENAI_API_KEY"; then
+            echo "OPENAI_API_KEY is not configured; refusing a false-success editorial run"
+            exit 1
+          fi
+      - name: Collect candidate stories
+        run: python automation/collect.py
+      - name: Select fresh stories
+        run: python automation/select.py
+      - name: Generate original English editorial drafts
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          WATCHFLOOR_AI_MAX_ARTICLES: '3'
+        run: python automation/editorial.py
+      - name: Translate staged News articles only
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          WATCHFLOOR_MAX_TRANSLATIONS: '12'
+        run: python automation/translate_news.py
+      - name: Approve qualifying News only
+        run: python automation/approve_news.py
+      - name: Build validated News-only JSON feed
+        run: python automation/build_news_feed.py
+      - name: Build isolated site preview (never deploy)
+        run: |
+          python build.py index.html watchfloor-news-preview.html
+          test -s watchfloor-news-preview.html
+          grep -q "loadAutomatedNews" watchfloor-news-preview.html
+      - name: Upload site preview for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: watchfloor-news-preview
+          path: |
+            watchfloor-news-preview.html
+            data/automated-news.json
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Validate generated News feed and site preview
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          preview = Path("watchfloor-news-preview.html").read_text(encoding="utf-8")
+          assert "loadAutomatedNews" in preview
+          assert "data/automated-news.json" in preview
+          feed = Path("data/automated-news.json")
+          if feed.exists():
+              data = json.loads(feed.read_text(encoding="utf-8"))
+              assert data.get("section") == "News"
+              assert all(item.get("section") == "News" for item in data.get("items", []))
+              print("Preview and News-only feed validated:", len(data.get("items", [])), "items")
+          else:
+              print("Preview validated; no approved News feed yet")
+          PY
+      - name: Audit changed files before staging commit
+        run: |
+          git status --short
+          python - <<'PY'
+          import subprocess
+          allowed = {
+              "automation/candidates.json",
+              "automation/selected.json",
+              "automation/editorial.json",
+              "automation/news_translations.json",
+              "data/automated-news.json",
+          }
+          changed = set(subprocess.check_output(["git", "ls-files", "--modified", "--others", "--exclude-standard"], text=True).splitlines())
+          # The HTML preview is a temporary build artifact, not a publication target.
+          changed.discard("watchfloor-news-preview.html")
+          unexpected = sorted(changed - allowed)
+          if unexpected:
+              raise SystemExit("Refusing staging update; unexpected modified files: " + ", ".join(unexpected))
+          print("Staging-only file audit passed:", sorted(changed))
+          PY
+      - name: Commit staging data only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add automation/candidates.json automation/selected.json
+          if test -f automation/editorial.json; then git add automation/editorial.json; fi
+          if test -f automation/news_translations.json; then git add automation/news_translations.json; fi
+          if test -f data/automated-news.json; then git add data/automated-news.json; fi
+          if ! git diff --cached --quiet; then
+            git commit -m "Update WatchFloor staged editorial drafts"
+            git push origin HEAD:feature/automated-news-ingestion
+          fi

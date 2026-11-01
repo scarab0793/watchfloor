@@ -1,0 +1,61 @@
+name: News collector tests
+on:
+  pull_request:
+    paths:
+      - 'automation/**'
+      - '.github/workflows/news-ci.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Offline unit tests
+        run: python -m unittest discover -s automation -p 'test_*.py' -v
+  live-feed-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Remove cached candidates so test measures this run only
+        run: rm -f automation/candidates.json
+      - name: Fetch public RSS feeds (no publishing)
+        run: python automation/collect.py
+      - name: Select staging digest without AI
+        run: python automation/select.py
+      - name: Verify staging digest
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          rows = json.loads(Path("automation/selected.json").read_text())
+          assert 6 <= len(rows) <= 12
+          assert len({x["source"] for x in rows}) >= 3
+          assert all(x["status"] == "staging_unverified" for x in rows)
+          print("Staging digest:", len(rows), "articles from", len({x["source"] for x in rows}), "sources")
+          PY
+      - name: Check candidate count
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("automation/candidates.json")
+          rows = json.loads(p.read_text()) if p.exists() else []
+          print("Fresh candidate articles:", len(rows))
+          from datetime import datetime, timezone, timedelta
+          now = datetime.now(timezone.utc)
+          fresh = [x for x in rows if now - timedelta(hours=48) <= datetime.fromisoformat(x["published"]) <= now + timedelta(hours=1)]
+          sources = {x["source"] for x in fresh}
+          print("Verified fresh articles:", len(fresh), "from", len(sources), "sources:", ", ".join(sorted(sources)))
+          if len(fresh) < 20 or len(sources) < 5:
+              raise SystemExit("Collector FAILED: need at least 20 fresh articles from 5 independent sources")
+          for item in rows[:5]:
+              print(item["source"], item["published"], item["title"][:100])
+          PY

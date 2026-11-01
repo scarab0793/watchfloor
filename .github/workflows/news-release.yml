@@ -1,0 +1,91 @@
+name: WatchFloor News release (manual guarded)
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: watchfloor-news-release
+  cancel-in-progress: false
+jobs:
+  release:
+    if: github.ref == 'refs/heads/main' && vars.WATCHFLOOR_NEWS_RELEASE_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run News tests before release
+        run: python -m unittest discover -s automation -p "test_*.py" -v
+      - name: Verify approved News feed exists
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path("data/automated-news.json")
+          if not path.exists():
+              raise SystemExit("No approved News feed on main; release blocked")
+          feed = json.loads(path.read_text(encoding="utf-8"))
+          if feed.get("section") != "News" or not isinstance(feed.get("items"), list) or not feed["items"]:
+              raise SystemExit("No publishable News items; release blocked")
+          if any(not isinstance(item, dict) or item.get("section") != "News" for item in feed["items"]):
+              raise SystemExit("Non-News item found; release blocked")
+          ids = [item.get("id") for item in feed["items"]]
+          if any(not isinstance(identifier, str) or not identifier for identifier in ids) or len(ids) != len(set(ids)):
+              raise SystemExit("Missing or duplicate News IDs; release blocked")
+          if any(not isinstance(item.get("published_at"), str) or not item["published_at"] for item in feed["items"]):
+              raise SystemExit("Missing News publication timestamps; release blocked")
+          languages = set(json.loads(Path("i18n/ui.json").read_text(encoding="utf-8"))) - {"en"}
+          for item in feed["items"]:
+              translations = item.get("translations")
+              if not isinstance(translations, dict) or not languages.issubset(translations):
+                  raise SystemExit("Incomplete News translations; release blocked")
+              paragraphs = item.get("paragraphs")
+              if not isinstance(paragraphs, list) or len(paragraphs) < 5:
+                  raise SystemExit("Incomplete English News article; release blocked")
+              for language in languages:
+                  translated = translations[language]
+                  if not isinstance(translated, dict) or not all(isinstance(translated.get(k), str) and translated[k].strip() for k in ("t", "s")):
+                      raise SystemExit("Invalid News translation; release blocked")
+                  if not isinstance(translated.get("p"), list) or len(translated["p"]) != len(paragraphs):
+                      raise SystemExit("Mismatched News paragraphs; release blocked")
+          PY
+      - name: Build live page without changing existing article data
+        run: |
+          cp index.html /tmp/watchfloor-before.html
+          python build.py /tmp/watchfloor-before.html index.html
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          before = Path("/tmp/watchfloor-before.html").read_text(encoding="utf-8")
+          after = Path("index.html").read_text(encoding="utf-8")
+          pattern = r'const items=\[[\s\S]*?\n\];'
+          original = re.search(pattern, before)
+          rebuilt = re.search(pattern, after)
+          if not original or not rebuilt or original.group() != rebuilt.group():
+              raise SystemExit("Existing article data changed; release blocked")
+          if "async function loadAutomatedNews()" not in after or 'fetch("data/automated-news.json"' not in after:
+              raise SystemExit("News loader or feed endpoint missing; release blocked")
+          if 'feed.section!=="News"' not in after or 'a.section!=="News"' not in after:
+              raise SystemExit("News-only frontend filtering missing; release blocked")
+          print("Existing articles preserved, News loader present")
+          PY
+      - name: Confirm release touches only index.html
+        run: |
+          python - <<'PY'
+          import subprocess
+          changed = subprocess.check_output(["git", "diff", "--name-only"], text=True).splitlines()
+          if set(changed) - {"index.html"}:
+              raise SystemExit("Release blocked: unexpected file changes " + repr(changed))
+          print("Release file audit passed:", changed)
+          PY
+      - name: Commit only the rebuilt page
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Enable approved News feed loader on WatchFloor"
+            git push origin HEAD:main
+          fi

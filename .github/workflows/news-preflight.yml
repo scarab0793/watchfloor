@@ -1,6 +1,13 @@
 name: WatchFloor News preflight (no AI cost)
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'automation/**'
+      - '.github/workflows/news-preflight.yml'
+      - 'template.html'
+      - 'build.py'
 permissions:
   contents: read
 jobs:

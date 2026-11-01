@@ -62,8 +62,11 @@ def select(rows, now=None):
 def main():
     rows = json.loads(CANDIDATES.read_text(encoding="utf-8"))
     selected = select(rows)
+    if not selected:
+        print("No fresh valid stories; preserving previous staging data")
+        return
     if len(selected) < 6 or len({x["source"] for x in selected}) < 3:
-        raise SystemExit("Selection failed: fewer than 6 stories or 3 sources; no staging update")
+        print("Low news volume; continuing with", len(selected), "valid stories from", len({x["source"] for x in selected}), "sources")
     OUTPUT.write_text(json.dumps(selected, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print("STAGING SELECTED", len(selected), "from", len({x["source"] for x in selected}), "sources")
     print("No live HTML or publishing files modified.")

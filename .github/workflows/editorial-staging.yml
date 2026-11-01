@@ -1,8 +1,6 @@
 name: WatchFloor editorial staging (3x daily)
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '10 5,11,17 * * *'
 permissions:
   contents: write
 concurrency:
@@ -22,6 +20,12 @@ jobs:
           python-version: '3.12'
       - name: Parser tests
         run: python -m unittest discover -s automation -p 'test_*.py' -v
+      - name: Confirm workflow runs on intended branch
+        run: |
+          if test "${GITHUB_REF_NAME}" != "feature/automated-news-ingestion"; then
+            echo "Refusing staging on unexpected branch: ${GITHUB_REF_NAME}"
+            exit 1
+          fi
       - name: Confirm News-only branch and publishing safeguards
         run: |
           python - <<'PY'

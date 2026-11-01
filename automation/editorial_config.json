@@ -1,0 +1,16 @@
+{
+  "language": "en",
+  "translation_mode": "existing_i18n",
+  "schedule_utc": [
+    "05:10",
+    "11:10",
+    "17:10"
+  ],
+  "max_articles_per_run": 3,
+  "min_source_article_characters": 2200,
+  "minimum_words": 350,
+  "maximum_words": 850,
+  "publication_mode": "staging_until_tests_pass",
+  "require_sources": true,
+  "require_image_credit": true
+}

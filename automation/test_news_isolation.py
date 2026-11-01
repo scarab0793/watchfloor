@@ -24,6 +24,11 @@ class NewsSafetyTests(unittest.TestCase):
         self.assertIn('news_translations.json', code)
         self.assertNotIn('i18n" / language', code)
 
+    def test_only_approved_news_reaches_feed(self):
+        feed_builder = (BASE / "build_news_feed.py").read_text()
+        self.assertIn('article.get("status") != "approved"', feed_builder)
+        self.assertIn('article.get("section") != "News"', feed_builder)
+
     def test_template_only_adds_news(self):
         template = (BASE.parent / "template.html").read_text()
         self.assertIn('feed.section!=="News"', template)

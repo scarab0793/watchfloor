@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   editorial:
-    if: github.event_name == 'workflow_dispatch' || vars.WATCHFLOOR_EDITORIAL_ENABLED == 'true'
+    if: vars.WATCHFLOOR_EDITORIAL_ENABLED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:

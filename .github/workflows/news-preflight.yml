@@ -26,8 +26,7 @@ jobs:
           if test -n "$OPENAI_API_KEY"; then
             echo "OPENAI_API_KEY is configured"
           else
-            echo "::error::OPENAI_API_KEY missing; editorial AI pipeline cannot run"
-            exit 1
+            echo "::warning::OPENAI_API_KEY missing; AI publishing remains blocked, but source diagnostics will continue"
           fi
       - name: Run offline tests
         run: python -m unittest discover -s automation -p 'test_*.py' -v

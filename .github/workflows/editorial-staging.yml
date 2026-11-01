@@ -1,0 +1,43 @@
+name: WatchFloor editorial staging (3x daily)
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '10 5,11,17 * * *'
+permissions:
+  contents: write
+concurrency:
+  group: watchfloor-editorial-staging
+  cancel-in-progress: false
+jobs:
+  editorial:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/automated-news-ingestion
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Parser tests
+        run: python -m unittest discover -s automation -p 'test_*.py' -v
+      - name: Collect candidate stories
+        run: python automation/collect.py
+      - name: Select fresh stories
+        run: python automation/select.py
+      - name: Generate original English editorial drafts
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          WATCHFLOOR_AI_MAX_ARTICLES: '3'
+        run: python automation/editorial.py
+      - name: Commit staging data only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add automation/candidates.json automation/selected.json
+          if test -f automation/editorial.json; then git add automation/editorial.json; fi
+          if ! git diff --cached --quiet; then
+            git commit -m "Update WatchFloor staged editorial drafts"
+            git push origin HEAD:feature/automated-news-ingestion
+          fi

@@ -1,6 +1,8 @@
 name: WatchFloor editorial staging (3x daily)
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "10 5,11,17 * * *"
 permissions:
   contents: write
 concurrency:
@@ -8,6 +10,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   editorial:
+    if: github.event_name == 'workflow_dispatch' || vars.WATCHFLOOR_EDITORIAL_ENABLED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:

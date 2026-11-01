@@ -44,8 +44,10 @@ jobs:
           rebuilt = re.search(pattern, after)
           if not original or not rebuilt or original.group() != rebuilt.group():
               raise SystemExit("Existing article data changed; release blocked")
-          if "loadAutomatedNews" not in after:
-              raise SystemExit("News loader missing; release blocked")
+          if "async function loadAutomatedNews()" not in after or 'fetch("data/automated-news.json"' not in after:
+              raise SystemExit("News loader or feed endpoint missing; release blocked")
+          if 'feed.section!=="News"' not in after or 'a.section!=="News"' not in after:
+              raise SystemExit("News-only frontend filtering missing; release blocked")
           print("Existing articles preserved, News loader present")
           PY
       - name: Confirm release touches only index.html

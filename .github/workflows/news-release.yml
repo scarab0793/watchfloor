@@ -31,8 +31,20 @@ jobs:
               raise SystemExit("No publishable News items; release blocked")
           if any(not isinstance(item, dict) or item.get("section") != "News" for item in feed["items"]):
               raise SystemExit("Non-News item found; release blocked")
-          if any(not isinstance(item.get("translations"), dict) for item in feed["items"]):
-              raise SystemExit("Missing News translations; release blocked")
+          languages = set(json.loads(Path("i18n/ui.json").read_text(encoding="utf-8"))) - {"en"}
+          for item in feed["items"]:
+              translations = item.get("translations")
+              if not isinstance(translations, dict) or not languages.issubset(translations):
+                  raise SystemExit("Incomplete News translations; release blocked")
+              paragraphs = item.get("paragraphs")
+              if not isinstance(paragraphs, list) or len(paragraphs) < 5:
+                  raise SystemExit("Incomplete English News article; release blocked")
+              for language in languages:
+                  translated = translations[language]
+                  if not isinstance(translated, dict) or not all(isinstance(translated.get(k), str) and translated[k].strip() for k in ("t", "s")):
+                      raise SystemExit("Invalid News translation; release blocked")
+                  if not isinstance(translated.get("p"), list) or len(translated["p"]) != len(paragraphs):
+                      raise SystemExit("Mismatched News paragraphs; release blocked")
           PY
       - name: Build live page without changing existing article data
         run: |

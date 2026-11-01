@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: feature/automated-news-ingestion
+          ref: main
           persist-credentials: true
       - uses: actions/setup-python@v5
         with:
@@ -22,7 +22,7 @@ jobs:
         run: python -m unittest discover -s automation -p 'test_*.py' -v
       - name: Confirm workflow runs on intended branch
         run: |
-          if test "${GITHUB_REF_NAME}" != "feature/automated-news-ingestion"; then
+          if test "${GITHUB_REF_NAME}" != "main"; then
             echo "Refusing staging on unexpected branch: ${GITHUB_REF_NAME}"
             exit 1
           fi
@@ -124,5 +124,5 @@ jobs:
           if test -f data/automated-news.json; then git add data/automated-news.json; fi
           if ! git diff --cached --quiet; then
             git commit -m "Update WatchFloor staged editorial drafts"
-            git push origin HEAD:feature/automated-news-ingestion
+            git push origin HEAD:main
           fi

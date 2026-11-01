@@ -195,7 +195,7 @@ async function loadAutomatedNews(){
      if(!TR[code][a.id])TR[code][a.id]={t:esc(tr.t),s:esc(tr.s),p:tr.p.map(esc)};
     }
    }
-   items.unshift(entry);existing.add(a.id);added++;
+   items.push(entry);existing.add(a.id);added++;
   }
   if(added){applyLang();route()}
  }catch(error){console.warn("News feed unavailable; original content preserved")}

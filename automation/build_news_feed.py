@@ -80,9 +80,14 @@ def main():
         for prior in previous["items"]:
             if not isinstance(prior, dict) or prior.get("section") != "News":
                 raise SystemExit("Unexpected non-News entry in existing feed; refusing overwrite")
-            if prior.get("id") not in existing_ids:
+            prior_id = prior.get("id")
+            if not isinstance(prior_id, str) or not prior_id:
+                raise SystemExit("Existing News entry missing valid ID; refusing overwrite")
+            if not isinstance(prior.get("published_at"), str) or not prior["published_at"]:
+                raise SystemExit("Existing News entry missing timestamp; refusing overwrite")
+            if prior_id not in existing_ids:
                 items.append(prior)
-                existing_ids.add(prior.get("id"))
+                existing_ids.add(prior_id)
     items.sort(key=lambda item: item["published_at"], reverse=True)
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text(json.dumps({"schema_version": 1, "section": "News", "items": items},

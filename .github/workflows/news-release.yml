@@ -48,6 +48,15 @@ jobs:
               raise SystemExit("News loader missing; release blocked")
           print("Existing articles preserved, News loader present")
           PY
+      - name: Confirm release touches only index.html
+        run: |
+          python - <<'PY'
+          import subprocess
+          changed = subprocess.check_output(["git", "diff", "--name-only"], text=True).splitlines()
+          if set(changed) - {"index.html"}:
+              raise SystemExit("Release blocked: unexpected file changes " + repr(changed))
+          print("Release file audit passed:", changed)
+          PY
       - name: Commit only the rebuilt page
         run: |
           git config user.name "github-actions[bot]"

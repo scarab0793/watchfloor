@@ -83,6 +83,8 @@ def main():
     if not os.getenv("OPENAI_API_KEY"):
         print("No API key: safely skipping editorial and translations"); return
     rows=json.loads((ROOT/"selected.json").read_text())
+    # News only: Analysis is maintained manually and must never be regenerated.
+    rows=[x for x in rows if str(x.get("section","News")).casefold()=="news" and str(x.get("status",""))=="staging_unverified"]
     archive=json.loads(ARCHIVE.read_text()) if ARCHIVE.exists() else {"items":[]}
     done={s["url"] for a in archive["items"] for s in a.get("sources",[])}
     count=0
@@ -105,7 +107,7 @@ def main():
                 "category":group[0]["category"],"title":article["title"],"summary":article["summary"],
                 "paragraphs":article["paragraphs"],"published_at":dt.datetime.now(dt.timezone.utc).isoformat(),
                 "sources":[{"publisher":s["publisher"],"url":s["url"]} for s in sources],
-                "image":"","image_credit":"","ai_edited":True,"status":"staging_review_required"}
+                "image":"","image_credit":"","ai_edited":True,"section":"News","status":"staging_review_required"}
             archive["items"].append(entry); done.update(urls); count+=1
         except Exception as ex:
             print("Article generation failed:",type(ex).__name__)

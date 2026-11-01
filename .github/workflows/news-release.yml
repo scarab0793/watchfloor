@@ -39,7 +39,7 @@ jobs:
           from pathlib import Path
           before = Path("/tmp/watchfloor-before.html").read_text(encoding="utf-8")
           after = Path("index.html").read_text(encoding="utf-8")
-          pattern = r'const items=\\[[\\s\\S]*?\\n\\];'
+          pattern = r'const items=\[[\s\S]*?\n\];'
           original = re.search(pattern, before)
           rebuilt = re.search(pattern, after)
           if not original or not rebuilt or original.group() != rebuilt.group():

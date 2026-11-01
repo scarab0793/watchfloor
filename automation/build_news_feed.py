@@ -64,7 +64,7 @@ def main():
     languages = json.loads((BASE / "i18n" / "ui.json").read_text()).keys()
     items = build(articles, translations, languages)
     if not items:
-        print("No valid staged News; preserving existing News feed")
+        print("No approved News articles; preserving existing News feed")
         return
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT.write_text(json.dumps({"schema_version": 1, "section": "News", "items": items},

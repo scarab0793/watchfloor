@@ -95,9 +95,39 @@ jobs:
           name: watchfloor-news-preview
           path: |
             watchfloor-news-preview.html
+            automation/candidates.json
+            automation/selected.json
+            automation/editorial.json
+            automation/news_translations.json
             data/automated-news.json
           if-no-files-found: warn
           retention-days: 7
+      - name: Summarize editorial output and flag empty News feed
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          def read(path, fallback):
+              p=Path(path)
+              return json.loads(p.read_text(encoding="utf-8")) if p.exists() else fallback
+          candidates=read("automation/candidates.json", [])
+          selected=read("automation/selected.json", [])
+          archive=read("automation/editorial.json", {"items":[]}).get("items", [])
+          feed=read("data/automated-news.json", {"items":[]}).get("items", [])
+          approved=sum(a.get("status")=="approved" and a.get("section")=="News" for a in archive)
+          lines=["## WatchFloor editorial trial results",
+                 f"- Collected candidates: {len(candidates)}",
+                 f"- Selected stories: {len(selected)}",
+                 f"- Drafts in archive: {len(archive)}",
+                 f"- Approved News articles: {approved}",
+                 f"- Published-feed-ready News items: {len(feed)}"]
+          if not feed:
+              lines.append("- **No approved News feed was produced. This is a diagnostic success, not a publication success.**")
+              print("::warning::No approved News feed produced; inspect selected.json and editorial generation logs")
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a",encoding="utf-8") as out:
+              out.write("\n".join(lines)+"\n")
+          print("\n".join(lines))
+          PY
       - name: Validate generated News feed and site preview
         run: |
           python - <<'PY'

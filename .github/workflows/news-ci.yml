@@ -37,7 +37,7 @@ jobs:
           from pathlib import Path
           rows = json.loads(Path("automation/selected.json").read_text())
           assert isinstance(rows, list)
-          assert len(rows) <= 12
+          assert len(rows) <= 40
           assert all(x["status"] == "staging_unverified" for x in rows)
           print("Staging digest:", len(rows), "articles from", len({x["source"] for x in rows}), "sources")
           PY

@@ -161,7 +161,8 @@ def find_corrob_candidates(rows):
                 if added >= 4:
                     break
         except (OSError, ValueError, TypeError, KeyError) as ex:
-            print("Corroboration lookup unavailable:", type(ex).__name__)
+            reason = getattr(ex, "reason", None)
+            print("Corroboration lookup unavailable:", type(ex).__name__, str(reason or ex)[:180])
     print("Additional corroboration candidates:", len(expanded) - len(rows))
     return expanded
 

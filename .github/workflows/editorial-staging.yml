@@ -1,6 +1,12 @@
 name: WatchFloor editorial staging (3x daily)
 on:
   workflow_dispatch:
+    inputs:
+      trial_run:
+        description: 'Run one controlled editorial trial without enabling the schedule'
+        type: boolean
+        required: true
+        default: true
   schedule:
     - cron: "10 5,11,17 * * *"
 permissions:
@@ -10,7 +16,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   editorial:
-    if: vars.WATCHFLOOR_EDITORIAL_ENABLED == 'true'
+    if: vars.WATCHFLOOR_EDITORIAL_ENABLED == 'true' || (github.event_name == 'workflow_dispatch' && inputs.trial_run == true)
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -130,6 +136,7 @@ jobs:
           print("Staging-only file audit passed:", sorted(changed))
           PY
       - name: Commit staging data only
+        if: github.event_name != 'workflow_dispatch' || inputs.trial_run != true
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

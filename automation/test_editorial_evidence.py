@@ -17,8 +17,9 @@ class EditorialEvidenceTests(unittest.TestCase):
     def test_editorial_has_evidence_gate_before_api(self):
         from pathlib import Path
         code = (Path(__file__).parent / "editorial.py").read_text()
-        self.assertIn('sum(len(s["reference"]) >= CFG["min_source_article_characters"] for s in sources) < 2', code)
-        self.assertLess(code.index('sum(len(s["reference"])'), code.index('article=api(prompt)'))
+        self.assertIn('len(s["reference"]) >= CFG["min_source_article_characters"]', code)
+        self.assertIn('if len(substantial) < 2:', code)
+        self.assertLess(code.index('if len(substantial) < 2:'), code.index('article=api(prompt)'))
 
 if __name__ == "__main__":
     unittest.main()

@@ -17,35 +17,95 @@ CFG = json.loads((ROOT / "editorial_config.json").read_text())
 ARCHIVE = ROOT / "editorial.json"
 
 class Extract(HTMLParser):
+    """Collect readable article paragraphs without losing text in nested inline tags."""
     def __init__(self):
-        super().__init__(); self.skip=0; self.inside=False; self.buf=[]; self.parts=[]
-    def handle_starttag(self,t,a):
-        if t in ("script","style","nav","footer","header","aside","form"): self.skip+=1
-        if t=="p" and not self.skip: self.inside=True; self.buf=[]
-    def handle_data(self,v):
-        if self.inside and not self.skip: self.buf.append(v)
-    def handle_endtag(self,t):
-        if t=="p" and self.inside:
-            s=" ".join("".join(self.buf).split())
-            if 80<len(s)<2200: self.parts.append(s)
-            self.inside=False
-        if t in ("script","style","nav","footer","header","aside","form") and self.skip: self.skip-=1
+        super().__init__()
+        self.skip = 0
+        self.inside = False
+        self.depth = 0
+        self.buf = []
+        self.parts = []
+        self.jsonld = False
+        self.jsonld_buf = []
+        self.jsonld_bodies = []
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        if tag == "script" and attrs.get("type", "").lower() == "application/ld+json":
+            self.jsonld = True
+            self.jsonld_buf = []
+        if tag in ("script", "style", "nav", "footer", "header", "aside", "form"):
+            self.skip += 1
+        if tag == "p" and not self.skip:
+            self.inside = True
+            self.depth = 1
+            self.buf = []
+        elif self.inside and tag == "p":
+            self.depth += 1
+
+    def handle_data(self, value):
+        if self.jsonld:
+            self.jsonld_buf.append(value)
+        if self.inside and not self.skip:
+            self.buf.append(value)
+
+    def handle_endtag(self, tag):
+        if tag == "p" and self.inside:
+            self.depth -= 1
+            if self.depth == 0:
+                s = " ".join(" ".join(self.buf).split())
+                if 80 < len(s) < 2200:
+                    self.parts.append(s)
+                self.inside = False
+        if tag == "script" and self.jsonld:
+            try:
+                self.jsonld_bodies.extend(self._bodies(json.loads("".join(self.jsonld_buf))))
+            except (ValueError, TypeError):
+                pass
+            self.jsonld = False
+        if tag in ("script", "style", "nav", "footer", "header", "aside", "form") and self.skip:
+            self.skip -= 1
+
+    @staticmethod
+    def _bodies(data):
+        pending = [data]
+        result = []
+        while pending:
+            obj = pending.pop()
+            if isinstance(obj, list):
+                pending.extend(obj)
+            elif isinstance(obj, dict):
+                body = obj.get("articleBody")
+                if isinstance(body, str) and len(body) >= 300:
+                    result.append(body)
+                pending.extend(v for v in obj.values() if isinstance(v, (list, dict)))
+        return result
+
 
 def evidence(url):
-    p=urlsplit(url)
-    if p.scheme!="https" or not p.hostname: return ""
-    bot="WatchFloorEditorialBot/1.0"
-    robots=RobotFileParser(); robots.set_url(p.scheme+"://"+p.netloc+"/robots.txt")
+    p = urlsplit(url)
+    if p.scheme != "https" or not p.hostname:
+        return ""
+    bot = "WatchFloorEditorialBot/1.0"
+    robots = RobotFileParser()
+    robots.set_url(p.scheme + "://" + p.netloc + "/robots.txt")
     try:
         robots.read()
-        if not robots.can_fetch(bot,url): return ""
-        request=urllib.request.Request(url,headers={"User-Agent":bot,"Accept":"text/html"})
-        with urllib.request.urlopen(request,timeout=12) as r:
-            if "html" not in r.headers.get("Content-Type",""): return ""
-            page=r.read(650000).decode("utf-8","replace")
-        parser=Extract(); parser.feed(page)
-        return "\n".join(parser.parts[:25])[:11000]
-    except (OSError,ValueError,UnicodeError): return ""
+        if not robots.can_fetch(bot, url):
+            return ""
+        request = urllib.request.Request(url, headers={"User-Agent": bot, "Accept": "text/html"})
+        with urllib.request.urlopen(request, timeout=12) as response:
+            if "html" not in response.headers.get("Content-Type", ""):
+                return ""
+            page = response.read(650000).decode("utf-8", "replace")
+        parser = Extract()
+        parser.feed(page)
+        paragraphs = "\n".join(parser.parts[:40])[:11000]
+        structured = max(parser.jsonld_bodies, key=len, default="")[:11000]
+        # Structured articleBody is preferred when the HTML includes unrelated page paragraphs.
+        return structured if len(structured) > len(paragraphs) else paragraphs
+    except (OSError, ValueError, UnicodeError):
+        return ""
 
 def api(prompt):
     key=os.getenv("OPENAI_API_KEY","")

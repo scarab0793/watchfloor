@@ -5,7 +5,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urlencode
 import re
 import urllib.request
 from urllib.parse import urlsplit
@@ -122,6 +122,50 @@ def tokens(title):
     stop={"after","about","from","with","that","this","says","over","into","the"}
     return {x for x in re.findall(r"[a-z0-9]{4,}",title.lower()) if x not in stop}
 
+def find_corrob_candidates(rows):
+    """Best-effort, free GDELT discovery; discovered reports remain unverified."""
+    known = {x["url"] for x in rows}
+    expanded = list(rows)
+    seen_seed_titles = set()
+    for seed in rows[:8]:
+        terms = list(tokens(seed["title"]))[:5]
+        if len(terms) < 3:
+            continue
+        signature = tuple(sorted(terms))
+        if signature in seen_seed_titles:
+            continue
+        seen_seed_titles.add(signature)
+        query = " ".join(terms[:4])
+        params = urlencode({"query": query, "mode": "artlist", "format": "json",
+                            "maxrecords": 15, "timespan": "2d", "sort": "datedesc"})
+        try:
+            req = urllib.request.Request("https://api.gdeltproject.org/api/v2/doc/doc?" + params,
+                                         headers={"User-Agent": "WatchFloorEditorialBot/1.0"})
+            with urllib.request.urlopen(req, timeout=8) as response:
+                result = json.load(response)
+            added = 0
+            for hit in result.get("articles", []):
+                url = hit.get("url", "")
+                p = urlsplit(url)
+                title = hit.get("title", "")
+                if (p.scheme != "https" or not p.hostname or p.username or p.password
+                        or not isinstance(title, str) or not 25 <= len(title) <= 250
+                        or url in known or p.hostname.lower() == urlsplit(seed["url"]).hostname.lower()):
+                    continue
+                # Search hits are candidates, never independent confirmation by themselves.
+                expanded.append({"url": url, "title": title, "source": p.hostname,
+                                 "published": hit.get("seendate", ""),
+                                 "category": seed["category"], "status": "staging_unverified"})
+                known.add(url)
+                added += 1
+                if added >= 4:
+                    break
+        except (OSError, ValueError, TypeError, KeyError) as ex:
+            print("Corroboration lookup unavailable:", type(ex).__name__)
+    print("Additional corroboration candidates:", len(expanded) - len(rows))
+    return expanded
+
+
 def group_items(rows):
     """Cheap semantic headline clustering; never treat same-topic stories as corroboration."""
     if len(rows) < 2:
@@ -174,6 +218,7 @@ def main():
     archive=json.loads(ARCHIVE.read_text()) if ARCHIVE.exists() else {"items":[]}
     done={s["url"] for a in archive["items"] for s in a.get("sources",[])}
     count=0
+    rows = find_corrob_candidates(rows)
     for group in group_items(rows):
         if count>=CFG["max_articles_per_run"]: break
         if any(x["url"] in done for x in group): continue

@@ -63,16 +63,41 @@ def tokens(title):
     return {x for x in re.findall(r"[a-z0-9]{4,}",title.lower()) if x not in stop}
 
 def group_items(rows):
-    used=set()
-    for i,a in enumerate(rows):
-        if i in used: continue
-        used.add(i); group=[a]; ta=tokens(a["title"])
-        for j,b in enumerate(rows):
-            if j in used or b["source"]==a["source"]: continue
-            tb=tokens(b["title"])
-            if ta and tb and len(ta&tb)>=4 and len(ta&tb)/min(len(ta),len(tb))>=.65:
-                group.append(b); used.add(j)
-        yield group
+    """Cheap semantic headline clustering; never treat same-topic stories as corroboration."""
+    if len(rows) < 2:
+        return
+    # One low-cost request compares all headlines, rather than one request per story.
+    headlines = [{"id": i, "title": x["title"], "category": x["category"],
+                  "source": x["source"], "published": x["published"]}
+                 for i, x in enumerate(rows)]
+    try:
+        answer = api(
+            "Group ONLY headlines describing the exact same concrete news event. "
+            "Different events in the same war, same weapon type, or same country are NOT matches. "
+            "Require at least two different publishers and distinct source domains. "
+            "Return JSON object with groups as arrays of integer ids. "
+            "When uncertain, omit the pair. Headlines: " + json.dumps(headlines))
+        proposed = answer.get("groups", [])
+    except Exception as ex:
+        print("Headline matching unavailable:", type(ex).__name__)
+        proposed = []
+    used = set()
+    for ids in proposed if isinstance(proposed, list) else []:
+        if not isinstance(ids, list) or len(ids) < 2:
+            continue
+        clean = []
+        for i in ids:
+            if type(i) is int and 0 <= i < len(rows) and i not in used and i not in clean:
+                clean.append(i)
+        if len(clean) < 2:
+            continue
+        domains = {urlsplit(rows[i]["url"]).hostname.lower().removeprefix("www.")
+                   for i in clean if urlsplit(rows[i]["url"]).hostname}
+        if len(domains) < 2 or len({rows[i]["source"] for i in clean}) < 2:
+            continue
+        used.update(clean)
+        yield [rows[i] for i in clean]
+    print("Matched cross-source event groups:", len(used), "headlines")
 
 def valid(a):
     if not isinstance(a,dict): return False
@@ -101,7 +126,7 @@ def main():
         sources=[{"publisher":x["source"],"url":x["url"],"headline":x["title"],"reference":evidence(x["url"])} for x in group]
         if sum(len(s["reference"]) >= CFG["min_source_article_characters"] for s in sources) < 2:
             print("Skipped: fewer than two substantial source articles (no AI charge)"); continue
-        prompt=("Produce original, factual English military reporting from ONLY the evidence. "
+        prompt=("First verify all supplied articles describe the SAME specific event; if not return empty object. Produce original, factual English military reporting from ONLY the evidence. "
             "Never invent details, quotations or numbers. Attribute disputed battlefield claims. "
             "Do not copy source wording or structure. If facts are insufficient return empty object. "
             "Return JSON title, summary, paragraphs array; 450-700 words. Evidence: "+json.dumps(sources))

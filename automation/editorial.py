@@ -124,7 +124,9 @@ def main():
             print("Skipped single-source story (no AI charge)")
             continue
         sources=[{"publisher":x["source"],"url":x["url"],"headline":x["title"],"reference":evidence(x["url"])} for x in group]
-        if sum(len(s["reference"]) >= CFG["min_source_article_characters"] for s in sources) < 2:
+        substantial = [s for s in sources if len(s["reference"]) >= CFG["min_source_article_characters"]]
+        print("Evidence lengths:", [(s["publisher"], len(s["reference"])) for s in sources])
+        if len(substantial) < 2:
             print("Skipped: fewer than two substantial source articles (no AI charge)"); continue
         prompt=("First verify all supplied articles describe the SAME specific event; if not return empty object. Produce original, factual English military reporting from ONLY the evidence. "
             "Never invent details, quotations or numbers. Attribute disputed battlefield claims. "

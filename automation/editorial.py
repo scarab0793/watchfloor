@@ -123,25 +123,26 @@ def tokens(title):
     return {x for x in re.findall(r"[a-z0-9]{4,}",title.lower()) if x not in stop}
 
 def find_corrob_candidates(rows):
-    """Best-effort, free GDELT discovery; discovered reports remain unverified."""
+    """Optional bounded GDELT discovery; never repeatedly hammer a failing API."""
+    import time
+    import urllib.error
     known = {x["url"] for x in rows}
     expanded = list(rows)
     seen_seed_titles = set()
-    for seed in rows[:8]:
-        terms = list(tokens(seed["title"]))[:5]
+    for seed in rows[:3]:
+        terms = sorted(tokens(seed["title"]))[:4]
         if len(terms) < 3:
             continue
-        signature = tuple(sorted(terms))
+        signature = tuple(terms)
         if signature in seen_seed_titles:
             continue
         seen_seed_titles.add(signature)
-        query = " ".join(terms[:4])
-        params = urlencode({"query": query, "mode": "artlist", "format": "json",
-                            "maxrecords": 15, "timespan": "2d", "sort": "datedesc"})
+        params = urlencode({"query": " ".join(terms), "mode": "artlist", "format": "json",
+                            "maxrecords": 10, "timespan": "2d", "sort": "datedesc"})
         try:
             req = urllib.request.Request("https://api.gdeltproject.org/api/v2/doc/doc?" + params,
                                          headers={"User-Agent": "WatchFloorEditorialBot/1.0"})
-            with urllib.request.urlopen(req, timeout=8) as response:
+            with urllib.request.urlopen(req, timeout=5) as response:
                 result = json.load(response)
             added = 0
             for hit in result.get("articles", []):
@@ -152,7 +153,6 @@ def find_corrob_candidates(rows):
                         or not isinstance(title, str) or not 25 <= len(title) <= 250
                         or url in known or p.hostname.lower() == urlsplit(seed["url"]).hostname.lower()):
                     continue
-                # Search hits are candidates, never independent confirmation by themselves.
                 expanded.append({"url": url, "title": title, "source": p.hostname,
                                  "published": hit.get("seendate", ""),
                                  "category": seed["category"], "status": "staging_unverified"})
@@ -163,6 +163,9 @@ def find_corrob_candidates(rows):
         except (OSError, ValueError, TypeError, KeyError) as ex:
             reason = getattr(ex, "reason", None)
             print("Corroboration lookup unavailable:", type(ex).__name__, str(reason or ex)[:180])
+            # Rate limits, TLS/connectivity failures: stop instead of repeating failed requests.
+            break
+        time.sleep(2)
     print("Additional corroboration candidates:", len(expanded) - len(rows))
     return expanded
 

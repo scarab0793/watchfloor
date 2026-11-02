@@ -130,6 +130,8 @@ jobs:
           changed = set(subprocess.check_output(["git", "ls-files", "--modified", "--others", "--exclude-standard"], text=True).splitlines())
           # The HTML preview is a temporary build artifact, not a publication target.
           changed.discard("watchfloor-news-preview.html")
+          # Python creates disposable bytecode caches during tests; never publish them.
+          changed = {p for p in changed if not (p.endswith(".pyc") and "__pycache__/" in p)}
           unexpected = sorted(changed - allowed)
           if unexpected:
               raise SystemExit("Refusing staging update; unexpected modified files: " + ", ".join(unexpected))

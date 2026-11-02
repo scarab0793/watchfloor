@@ -10,8 +10,8 @@ from urllib.parse import urlsplit
 ROOT = pathlib.Path(__file__).resolve().parent
 CANDIDATES = ROOT / "candidates.json"
 OUTPUT = ROOT / "selected.json"
-MAX_ITEMS = 12
-MAX_PER_SOURCE = 3
+MAX_ITEMS = 40
+MAX_PER_SOURCE = 8
 TOPICS = ("Ukraine", "Iran", "Gaza", "Multiple conflicts", "Defence & security")
 
 def key_title(value):

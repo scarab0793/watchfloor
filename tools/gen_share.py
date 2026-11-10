@@ -113,6 +113,7 @@ PAGE = """<!doctype html>
 <meta property="og:image" content="{image}">{imgsize}
 <meta property="og:url" content="{url}"><meta property="og:locale" content="{locale}">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{title}"><meta name="twitter:description" content="{desc}"><meta name="twitter:image" content="{image}">
 <link rel="canonical" href="{url}">
 <script>location.replace("{target}")</script></head>
 <body><p><a href="{target}">{title}</a></p></body></html>

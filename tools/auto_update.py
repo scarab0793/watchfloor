@@ -161,7 +161,9 @@ def main():
         print("nothing new"); return 0
     # newest first: items were collected newest-first, keep that order
     if os.environ.get("DRY_RUN"): print("dry run, %d items" % len(new_items)); return 0
-    open(os.path.join(ROOT, "index.html"), "w", encoding="utf-8").write(apply(read("index.html"), new_items))
+    out = apply(read("index.html"), new_items)
+    with open(os.path.join(ROOT, "index.html"), "w", encoding="utf-8") as f:
+        f.write(out)
     print("updated index.html with %d items" % len(new_items))
     return 0
 

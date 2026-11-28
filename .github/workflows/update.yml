@@ -1,7 +1,7 @@
 name: Update Watchfloor
 on:
   schedule:
-    - cron: "17 6,11,16,21 * * *"   # 4x daily (UTC)
+    - cron: "17 6,17 * * *"   # 2x daily (UTC)
   workflow_dispatch:
 permissions:
   contents: write
@@ -21,7 +21,7 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           ANTHROPIC_MODEL: ${{ vars.ANTHROPIC_MODEL || 'claude-sonnet-5-5' }}
-          MAX_NEW: "8"
+          MAX_NEW: "4"
         run: python3 tools/auto_update.py
       - name: Share pages
         run: python3 tools/gen_share.py

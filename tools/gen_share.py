@@ -144,7 +144,6 @@ def page(lang, aid, title, desc, image, local_img, route):
 
 def main():
     src = read("index.html")
-    news = {n["id"]: n for n in json_block(src, "news-data")}
     ana = json_block(src, "ana-data")
     ana_img = json_block(src, "ana-img")
     data = load_items(src)
@@ -154,7 +153,6 @@ def main():
 
     for it in data["items"]:
         aid = it["id"]
-        hu = news.get(aid, {}).get("hu")
         if aid in data["IMG"]:
             image, local = commons(data["IMG"][aid]), False
         elif it.get("img"):
@@ -163,8 +161,6 @@ def main():
         else:
             image, local = default_url, True
         langs = [("en", it["t"], it["s"])]
-        if hu:
-            langs.append(("hu", hu[0], hu[1]))
         for lang, t, s in langs:
             name, text = page(lang, aid, plain(t, 200), plain(s), image, local, aid)
             changed += write_if_changed("a/%s.html" % name, text)
@@ -173,7 +169,7 @@ def main():
     for aid, a in ana.items():
         rel = cover_file(aid, a.get("cover"), ana_img)
         image, local = ("%s/%s" % (SITE, rel), True) if rel else (default_url, True)
-        for lang in ("en", "hu"):
+        for lang in ("en",):
             x = a.get(lang) or a.get("en")
             name, text = page(lang, aid, plain(x["t"], 200), plain(x["s"]), image, local, "analysis/" + aid)
             changed += write_if_changed("a/%s.html" % name, text)
